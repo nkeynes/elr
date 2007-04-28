@@ -1,0 +1,44 @@
+Plan for v1.0
+-------------
+
+Build/deploy
+* Update build system to autoconf/automake.
+* Install target (need to deploy skel somewhere useful)
+* Add copyright headers to everything
+
+Useability
+* Add command-line flags for varying levels of debug output.
+* Better parser conflict debug output
+* Better error reporting
+
+Performance
+* Implement comb-vector algorithm as per the dragon book
+    - Get a copy of the dragon book
+* Optimize skeleton code, try to get performance to within epsilon of
+      bison/flex.
+* Test generator performance with larger grammars
+
+Features
+* Implement EBNF parser
+    - see nakata/sassa paper, etc
+* Implement minimal-state LR(1)
+    - see the paper (don't think I still have the files, but shouldn't be
+      hard to find)
+* Case-insensitive lexical support
+* Option to disable conflict resolution
+* Implement more advanced regular expression support. In particular:
+    - group counts ( a{n,m} )
+    - start of line/end of line ( ^, $ )
+    - named character classes (eg [[:alpha:]])
+* Additional backslash types:
+    - \x34 (hex char)
+    - \0377 (octal char)
+    - \0 (null)
+* Unicode?
+
+Testing
+* Unit tests
+    - Find a good C++ test framework?
+* Automated test cases
+    - Possibly steal some of the bison / flex cases
+
