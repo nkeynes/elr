@@ -34,6 +34,9 @@ void CodeGen::handleCommand( char *cmd, int len, FILE *out )
 
 /* Generic */
     if( MATCH(cmd,len,"START_CODE") ) {
+	FOR_EACH( act, Action, grammar->code ) {
+                writeActionCode( NULL, act->action->c_str(), out );
+	}
     } else if( MATCH(cmd,len,"END_CODE") ) {
     } else if( MATCH(cmd,len,"ATTRIBUTES") ) {
         writeAttributes( out );
