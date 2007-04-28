@@ -1,0 +1,4 @@
+grammar: 'b' "[a-z]*[a-df-z]" 'e'
+       | 'b' error
+       ;
+WHITESPACE = "[ \n\r\t]" ;

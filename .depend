@@ -1,0 +1,27 @@
+main.o: main.cc config.h grammar.h bitset.h stringset2.h lr.h \
+ combvect.h dfa.h conflict.h lex.h codegen.h
+grammar.o: grammar.cc grammar.h bitset.h stringset2.h dfa.h config.h \
+ combvect.h nfa.h
+grammar2.o: grammar2.cc config.h grammar.h bitset.h stringset2.h nfa.h
+parser.o: parser.cc grammar.h bitset.h stringset2.h lex.h
+lex.o: lex.cc lex.h grammar.h bitset.h stringset2.h parser.h
+lr.o: lr.cc grammar.h bitset.h stringset2.h lr.h combvect.h config.h
+lalr.o: lalr.cc grammar.h bitset.h stringset2.h lr.h combvect.h \
+ config.h
+lalrk.o: lalrk.cc lr.h grammar.h bitset.h stringset2.h combvect.h \
+ config.h
+dfa.o: dfa.cc dfa.h config.h bitset.h combvect.h nfa.h equiv.h \
+ grammar.h stringset2.h conflict.h lr.h
+dfa2.o: dfa2.cc config.h dfa.h bitset.h combvect.h equiv.h conflict.h \
+ grammar.h stringset2.h lr.h
+nfa.o: nfa.cc config.h nfa.h bitset.h equiv.h grammar.h stringset2.h
+conflict.o: conflict.cc grammar.h bitset.h stringset2.h lr.h \
+ combvect.h config.h conflict.h dfa.h
+codegen.o: codegen.cc config.h grammar.h bitset.h stringset2.h equiv.h \
+ codegen.h dfa.h combvect.h lr.h conflict.h
+c_codegen.o: c_codegen.cc config.h codegen.h grammar.h bitset.h \
+ stringset2.h dfa.h combvect.h lr.h conflict.h
+bitset.o: bitset.cc bitset.h
+equiv.o: equiv.cc equiv.h config.h bitset.h
+stringset2.o: stringset2.cc stringset2.h bitset.h
+combvect.o: combvect.cc combvect.h config.h

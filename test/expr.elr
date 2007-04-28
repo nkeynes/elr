@@ -1,0 +1,9 @@
+%right '+' '-' ;
+%right '*' '/' ;
+
+expr : expr '+' expr
+     | expr '-' expr
+     | expr '*' expr
+     | expr '/' expr
+     | '(' expr ')'
+     | "[0-9]+";

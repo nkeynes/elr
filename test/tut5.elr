@@ -1,0 +1,6 @@
+Statement : Dummy ':' 'start' Stmts 'Finish'
+          | 'action' ;
+Dummy: IDENT;
+Stmts: Statement
+     | Stmts ';' Statement ;
+IDENT: "[A-Za-z][A-Za-z0-9]*";

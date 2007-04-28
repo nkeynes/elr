@@ -1,0 +1,113 @@
+%{
+#include <string.h>
+#include "keyd.h"
+#include "actions.h"
+}
+
+block:	statements
+	|
+	;
+	
+statements: statement
+	| statements statement
+	;
+
+statement: modeblock
+	| keyline
+	| 'entry' '=' command	{ setEntryAction( $3 ); }
+        | 'exit' '=' command	{ setExitAction( $3 ); }
+	| 'start' '=' command	{ setStartupAction( $3 ); }
+	| error '\n'
+	;
+
+modeblock: 'mode' IDENT '{' 	{ openModeBlock( addMode($2) ); }
+              block '}'		{ closeModeBlock(); }
+	;
+
+
+keyline: modifiers key command	{ $2->mod = $1; addKey($2, $3); }
+	| key command		{ $1->mod = 0; addKey($1, $2); }
+	;
+
+(keyent_t) key:	'keycode' NUMBER '='	{ $$ = makeKeyent($2); }
+	;
+(unsigned int) modifiers: modifier
+	| modifiers modifier	{ $$ = $1 | $2 }
+	;
+
+(unsigned int)
+modifier: 'shift'		{ $$ = MOD_SHIFT }
+	| 'alt'			{ $$ = MOD_ALT }
+	| "control|ctrl"	{ $$ = MOD_CTRL }
+	| "lshift|shiftl"	{ $$ = MOD_SHIFTL }
+	| "rshift|shiftr"	{ $$ = MOD_SHIFTR }
+	| "lalt|altl"		{ $$ = MOD_ALTL }
+	| "ralt|altr"		{ $$ = MOD_ALTR }
+	| "lctrl|ctrll"		{ $$ = MOD_CTRLL }
+	| "rctrl|ctrlr"		{ $$ = MOD_CTRLR }
+	| 'up'			{ $$ = MOD_UP }
+	| 'down'		{ $$ = MOD_DOWN }
+	;
+
+(action_t) command: modecmd | execcmd | suidcmd | mixercmd | cdcmd | consolecmd
+	|			{ $$ = makeNullAction(); }
+	;
+
+(action_t) modecmd: 'mode' IDENT	{ $$ = makeModeAction($2); }
+	;
+(action_t) execcmd: 'exec' "[^\n]+" '\n'	{ $$ = makeExecAction(-1,-1,$2); }
+	;
+(action_t) suidcmd: 'suid' NUMBER NUMBER 'exec' "[^\n]+" '\n'
+					{ $$ = makeExecAction($2,$3,$5); }
+	;
+	
+(action_t) mixercmd: 'mixer' mixrec mixnam mixset { $$ = makeMixerAction($2,$3,$4.op,$4.l,$4.r); }
+	;
+(int) mixrec:   '+'			{ $$ = 1; }
+	| '-'				{ $$ = -1; }
+	|				{ $$ = 0; }
+	;
+(char *) mixnam: IDENT
+	|		{ $$ = strdup("vol"); }
+	;
+(struct { int op, l, r; }) mixset: NUMBER NUMBER { $$.l = $1; $$.r = $2; $$.op = MIX_SET; }
+	| SIGNNUMBER SIGNNUMBER		{ $$.l = $1; $$.r = $2; $$.op = MIX_DELTA; }
+	| NUMBER			{ $$.l = $$.r = $1; $$.op = MIX_SET; }
+	| SIGNNUMBER			{ $$.l = $$.r = $1; $$.op = MIX_DELTA; }
+	| 'mute'			{ $$.l = $$.r = -1; $$.op = MIX_MUTE; }
+	|				{ $$.op = MIX_RECONLY; }
+	;
+
+(action_t) cdcmd: 'cd' device cdop	{ $$ = makeCDAction( $2, $3, 0, 0 ); }
+	;
+	
+(char *) device: IDENT
+	|				{ $$ = NULL; }
+	;
+	
+(int) cdop: 'stop'				{ $$ = CD_STOP; }
+	| 'pause'			{ $$ = CD_PAUSE; }
+	| 'next'			{ $$ = CD_NEXT; }
+	| 'prev'			{ $$ = CD_PREV; }
+	| 'eject'			{ $$ = CD_EJECT; }
+	| 'stopeject'			{ $$ = CD_STOPEJECT; }
+	| 'lock'			{ $$ = CD_LOCK; }
+	| 'unlock'			{ $$ = CD_UNLOCK; }
+	;
+
+
+(action_t) consolecmd: 'console' consoleop	{ $$ = $2; }
+	;
+(action_t) consoleop: 'new'			{ $$ = makeConsoleAction( CON_NEW, 0, 0 ); }
+	| 'next' 			{ $$ = makeConsoleAction( CON_NEXT, 0, 0 ); }
+	| 'prev'			{ $$ = makeConsoleAction( CON_PREV, 0, 0 ); }
+	| 'mark' NUMBER			{ $$ = makeConsoleAction( CON_MARK, -1, $2 ); }
+	| 'mark' NUMBER NUMBER		{ $$ = makeConsoleAction( CON_MARK, $3, $2 ); }
+	| 'restore' NUMBER		{ $$ = makeConsoleAction( CON_REST, -1, $2 ); }
+	| NUMBER			{ $$ = makeConsoleAction( CON_SWITCH, $1, 0); }
+	;
+	
+(char *) IDENT = "[A-Za-z][A-Za-z0-9]*" ;
+(int) NUMBER = "[0-9]+|0x[0-9a-fA-F]+" ;
+(int) SIGNNUMBER = "[+-]([0-9]+|0x[0-9a-fA-F]+)" ;
+WHITESPACE = "[ \t\r\n]";

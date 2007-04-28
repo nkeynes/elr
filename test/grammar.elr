@@ -1,0 +1,37 @@
+%left ';' ':' ;
+%left '+' '=' ;
+
+stmt_list: stmt_list stmt
+         | ;
+
+stmt: option | rule ;
+
+option: "%type" IDENT
+      | "%left" IDENT
+      | "%right" IDENT
+      | "%nonassoc" IDENT
+      | "%[a-zA-Z]*"
+      | "error" ;
+
+rule: IDENT ':' rhs '.' ;
+
+rhs: rhs rhs_part
+   | ;
+
+dummy: 'error';
+
+rhs_part: IDENT
+   | rhs_part '|' rhs
+   | '[' rhs_part ']'
+   | '(' rhs_part ')'
+   | rhs_part '*'
+   | rhs_part '+'
+   | action
+   | "'\\?.'"
+   | "\"[^\"]*\"" ;
+
+action: '{' "[^{}]*"  action "[^{}]*" '}'
+      | ;
+
+IDENT: "[A-Za-z][A-Za-z0-9]*" ;
+

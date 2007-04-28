@@ -1,0 +1,5 @@
+grammar : 'd' b1 ab | 'd' b2 ac ;
+ab : "a*b";
+ac : "a*c";
+b1 : 'b';
+b2 : 'b';
