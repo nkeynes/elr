@@ -55,9 +55,9 @@ Directive : Lprec Precs SEMICOLON
                                    grammar.lookupIdent( $2.str, $2.posn ); }
           | CLASS String     { grammar.setClass( $2.str ); }
           | CODE             { grammar.addCode( $1.str, $1.posn ); }
-Lprec : LEFTPREC             { assoc = left; prec++; }
-Rprec : RIGHTPREC            { assoc = right; prec++; }
-Nprec : NONASSOCPREC         { assoc = none; prec++; }
+Lprec : LEFTPREC             { assoc = assoc_left; prec++; }
+Rprec : RIGHTPREC            { assoc = assoc_right; prec++; }
+Nprec : NONASSOCPREC         { assoc = assoc_none; prec++; }
 
 Rules : Type Lhs COLON Rhs SEMICOLON
         { $2->setType( $1.str );

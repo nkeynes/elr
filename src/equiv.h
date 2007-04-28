@@ -44,7 +44,7 @@ class EquivClassSet {
     int *repelems;
     int nGroups;
 
-    friend EquivClassIterator;
+    friend class EquivClassIterator;
 };
 
 /*************** Equivalence class iteration *************/
@@ -61,7 +61,7 @@ class EquivClassIterator {
 
     EquivClassIterator( const EquivClassSet *s, int el ) { set = s; elem = el;}
     
-    friend EquivClassSet;
+    friend class EquivClassSet;
 };
 
 inline bool EquivClassIterator::operator ==( const EquivClassIterator &it ) const {

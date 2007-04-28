@@ -24,7 +24,7 @@ class NFAState {
 
     void addEmptyMove( int dest );
     void addCharMove( int ch, int dest );
-    void addClassMove( string::iterator *s, int dest );
+    void addClassMove( char **s, int dest );
 };
 
 class NFA { 
@@ -47,8 +47,8 @@ class NFA {
     void print( FILE *out );
   protected:
     int addState( void );
-    int parseRegexpString( string::iterator *s, int start );
-    int parseRegexpChoice( string::iterator *s, int start );
+    int parseRegexpString( char **s, int start );
+    int parseRegexpChoice( char **s, int start );
     void genRegexpNFA( string &s, Symbol *sym );
     void genStringNFA( string &s, Symbol *sym );
 };                               

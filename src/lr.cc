@@ -1,11 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
-#include <hash_map>
 #include <algorithm>
 #include "grammar.h"
 #include "lr.h"
 
+namespace __gnu_cxx {
 template <> struct hash< set<LRItem> > {
     size_t operator()( set<LRItem> __s ) const {
         size_t __h = 0;
@@ -14,6 +14,7 @@ template <> struct hash< set<LRItem> > {
         return __h;
     }
 };
+}
 
 bool LRItem::operator <( const LRItem &item ) const
 {

@@ -4,6 +4,8 @@
 
 #pragma interface
 
+using namespace std;
+
 #include <vector>
 #include <set>
 #include <string>
@@ -39,7 +41,7 @@ class DFAState {
     Bitset predStates; /* Set of potential predecessor states */
     set<int> nfaStates;
 
-    friend DFA;
+    friend class DFA;
 };
 
 class DFA : public CombSource { 

@@ -5,9 +5,14 @@
 #include <vector>
 #include <list>
 #include <string>
-#include <hash_map>
+#include <ext/hash_map>
+
+using namespace std;
+using namespace __gnu_cxx;
+
 #include "bitset.h"
 #include "stringset2.h"
+
 
 #pragma interface
 class NFA; /* Defined fully in fsa.h */
@@ -28,7 +33,7 @@ class Node {
 
 };
 
-typedef enum { left, right, none } assoc_t;
+typedef enum { assoc_left, assoc_right, assoc_none } assoc_t;
 
 class ActionItem : public Node {
   public:

@@ -34,6 +34,11 @@ class Bitset {
         for( int i=0; i<length; i++ ) if( data[i] != b.data[i] ) return false;
         return true;
     }
+    bool operator !=( const Bitset &b ) const {
+        if( length != b.length ) return true;
+        for( int i=0; i<length; i++ ) if( data[i] != b.data[i] ) return true;
+        return false;
+    }
 
     Bitset operator &( const Bitset & );
   protected:

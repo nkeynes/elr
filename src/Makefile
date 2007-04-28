@@ -30,8 +30,8 @@ genchcls: symbolset.o genchcls.o
 	$(LD) $(LDFLAGS) $^ -o $@
 
 parser.cc parser.h: parser.y
-	$(YACC) -t -d -k -v -o parser.cc $+
-	mv -f parser.cc.h parser.h
+	$(YACC) -t -k -v -o parser.cc $+
+	mv -f parser.hh parser.h
 
 template.o: template.cc
 	$(CXX) $(CPPFLAGS) -c $< -o $@

@@ -4,6 +4,7 @@
  */
 
 #include <stdio.h>
+#include <assert.h>
 #include "lr.h"
 #include "grammar.h"
 

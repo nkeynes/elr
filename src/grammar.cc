@@ -176,7 +176,7 @@ Symbol::Symbol( string *str, Position &pos )
     name = str;
     posn = pos;
     refs = prec = 0;
-    assoc = none;
+    assoc = assoc_none;
     type = NULL;
     symbolId = 0;
     follows = Bitset();
@@ -218,8 +218,14 @@ Nonterminal::~Nonterminal( )
     FOR_EACH_RULE( i, this ) {
         delete *i;
     }
-    if( name ) delete name;
-    if( type ) delete type;
+    if( name ) {
+	delete name;
+	name = NULL;
+    }
+    if( type ) {
+	delete type;
+	type = NULL;
+    }
 }
 
 ActionItem::ActionItem(  string *act, Position &pos )

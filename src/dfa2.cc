@@ -1,3 +1,4 @@
+#include <assert.h>
 #include "config.h"
 #include "dfa.h"
 #include "equiv.h"

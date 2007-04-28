@@ -23,6 +23,8 @@ typedef int YY_CHAR;
 #define YY_ERROR(s) yyError(s)
 #endif
 
+
+
 typedef struct {
     char *source;
     char *str;
@@ -44,7 +46,13 @@ typedef struct yy_parseable {
     YY_CHAR yylchar;
     int yylpos;
     struct yy_parseable *next; /* For file stacking */
-} yy_parseable;
+};
+
+/* Function prototypes */
+YYRETVAL $PARSER_NAME( struct yy_parseable yyf );
+int yyfInit( struct yy_parseable *yyf );
+int yyfRelease( struct yy_parseable *yyf );
+int yyError( char *s );
 
 
 /* Parser tables */
@@ -72,7 +80,7 @@ YYRETVAL ${PARSER_NAME}_file( char *filename )
     yyf.fd = open( filename, O_RDONLY );
     if( yyf.fd == -1 ) return -1;
     yyf.buffer = NULL;
-    return $PARSER_NAME( &yyf );
+    return $PARSER_NAME( yyf );
 }
 
 YYRETVAL ${PARSER_NAME}_snarf_file( char *filename )
@@ -89,14 +97,14 @@ YYRETVAL ${PARSER_NAME}_snarf_file( char *filename )
         return -1;
     }
     if( S_ISREG(st.st_mode) && st.st_size < YYL_MAX_SNARF_LEN ) {
-        yyf.buffer = malloc( st.st_size );
+        yyf.buffer = (char *)malloc( st.st_size );
         if( yyf.buffer ) {
             yyf.buflen = st.st_size;
             yyf.ismybuffer = 1;
             yyf.buflen = read( yyf.fd, yyf.buffer, yyf.buflen );
         }
     }
-    return $PARSER_NAME(&yyf);    
+    return $PARSER_NAME(yyf);    
 }
     
 
@@ -109,7 +117,7 @@ YYRETVAL ${PARSER_NAME}_buffer( char *buf, int len )
     yyf.buflen = len;
     yyf.fd = -1;
     yyf.ismybuffer = 0;
-    return $PARSER_NAME( &yyf );
+    return $PARSER_NAME( yyf );
 }
 
 YYRETVAL ${PARSER_NAME}_stream( int fd )
@@ -119,7 +127,7 @@ YYRETVAL ${PARSER_NAME}_stream( int fd )
     yyf.fd = fd;
     yyf.buffer = NULL;
     yyf.filename = NULL;
-    return $PARSER_NAME( &yyf );
+    return $PARSER_NAME( yyf );
 }
 
 
@@ -137,6 +145,7 @@ int __inline__ YYP_GOTO( int state, int token ){
         } else { yypnextstate = yypDefault[yypnextstate]; } 
     } while( 1 );
     return yypnextstate;
+
 }
 
 /* Lexer macros */
@@ -154,7 +163,7 @@ int __inline__ YYL_GOTO( int state, int token ){
     return yylnextstate;
 }
 
-YYRETVAL $PARSER_NAME( yy_parseable yyf )
+YYRETVAL $PARSER_NAME( struct yy_parseable yyf )
 {
     int yytoken;
     int yypstate = $PARSER_START_STATE;
@@ -174,15 +183,15 @@ YYRETVAL $PARSER_NAME( yy_parseable yyf )
     yyfInit( &yyf );
     YYL_NEXT(yyf);
     
-    yypstatestack = malloc( YYP_DEFAULT_STACK_LEN * sizeof(int) );
-    yypattrstack = malloc( YYP_DEFAULT_STACK_LEN * sizeof(yytype_t) );
+    yypstatestack = (int *)malloc( YYP_DEFAULT_STACK_LEN * sizeof(int) );
+    yypattrstack = (yytype_t *)malloc( YYP_DEFAULT_STACK_LEN * sizeof(yytype_t) );
     
     while( yypstate != $PARSER_ACCEPT_STATE ) { /* While not accepting */
         /* Check stack size */ /* FIXME: Error checking */
         if( yypstacktop == yypstacklen ) {
             yypstacklen <<= 1;
-            yypstatestack = realloc( yypstatestack, yypstacklen );
-            yypattrstack = realloc( yypattrstack, yypstacklen );
+            yypstatestack = (int *)realloc( yypstatestack, yypstacklen );
+            yypattrstack = (yytype_t *)realloc( yypattrstack, yypstacklen );
         }
         
         /* Read a token */
@@ -247,7 +256,7 @@ $LEXER_ACTION_CODE;
 	    printf( "Scanned: %s (%.*s)\n", yySymbolName[yytoken], yyf.yylpos-yylfirst-1, yyf.buffer+yylfirst );
 	else
 	    printf( "Scanned: %s\n", yySymbolName[yytoken] );
-#endif DEBUG
+#endif /* DEBUG */
 
         if( yytoken == $LEXER_SPACE_TOKEN ) goto lexer;
 /************************ End Lexical Analysis Section ***********************/
@@ -310,12 +319,12 @@ $PARSER_ACTION_CODE;
                     }
 #ifdef DEBUG
                     printf( "Shift %s => ", yySymbolName[yypReduceToken[yypnextstate]] );
-#endif DEBUG
+#endif /* DEBUG */
                     yypnextstate = YYP_GOTO( yypstate,
                                              yypReduceToken[yypnextstate] );
 #ifdef DEBUG
                     printf( "%d\n", yypnextstate );
-#endif DEBUG
+#endif /* DEBUG */
                     assert( yypstate != $PARSER_NO_STATE );
                 } while ( yypnextstate >= $PARSER_FIRST_REDUCE_STATE );
                 yypstate = yypnextstate;
@@ -325,7 +334,7 @@ $PARSER_ACTION_CODE;
                 YYP_PUSH( yypstate, yylsynattr );
 #ifdef DEBUG
                 printf( "Shift %s => %d\n", yySymbolName[yytoken], yypnextstate );
-#endif DEBUG                
+#endif /* DEBUG */
                 yypstate = yypnextstate;
                 yyprecovering = 0;
                 break;
@@ -343,7 +352,7 @@ int yyfInit( struct yy_parseable *yyf )
 {
     yyf->yylpos = 0;
     if( yyf->buffer == NULL ) {
-        yyf->buffer = malloc( YYL_DEFAULT_BUFFER_LEN );
+        yyf->buffer = (char *)malloc( YYL_DEFAULT_BUFFER_LEN );
         yyf->buflen = YYL_DEFAULT_BUFFER_LEN;
         yyf->ismybuffer = 1;
     }
@@ -370,7 +379,7 @@ int yyfRelease( struct yy_parseable *yyf )
 
 int yyfPushFile( struct yy_parseable *yyf, char *filename )
 {
-    struct yy_parseable *next = malloc( sizeof(struct yy_parseable) );
+    struct yy_parseable *next = (struct yy_parseable *)malloc( sizeof(struct yy_parseable) );
     *next = *yyf;
     yyf->next = next;
     yyf->fd = open( filename, O_RDONLY );

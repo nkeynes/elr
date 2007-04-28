@@ -4,6 +4,8 @@
 #include <string>
 #include <iostream>
 
+using namespace std;
+
 #define INPUT_FILE_EXT "elr"
 #define DEBUG_FILE_EXT "out"
 #define SKELETON_PATH "skel/"

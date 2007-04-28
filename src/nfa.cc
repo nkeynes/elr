@@ -55,7 +55,7 @@ NFA *NFA::fromEOF( Symbol *sym )
 
 /* Return the appropriate unbackslashification of the first element of the
    given string. Update *s to point to the last character of the element */
-char unbackslashify( string::iterator *s )
+char unbackslashify( char **s )
 {
     /* Azsume (*s)[-1] == '\\' */
     switch( **s ) {
@@ -101,7 +101,7 @@ void NFA::genStringNFA( string &str, Symbol *sym )
     states[cur].accept = sym;
 }
 
-int NFA::parseRegexpString( string::iterator *s, int start )
+int NFA::parseRegexpString( char **s, int start )
 {
     int end, next, substart;
     bool brackets = false;
@@ -133,7 +133,7 @@ int NFA::parseRegexpString( string::iterator *s, int start )
     }
 }   
 
-int NFA::parseRegexpChoice( string::iterator *s, int start )
+int NFA::parseRegexpChoice( char **s, int start )
 {
     int cur = start, last = 0, next;
     char c;
@@ -222,7 +222,7 @@ void NFAState::addCharMove( int ch, int to )
     dest = to;
 }
 
-void NFAState::addClassMove( string::iterator *s, int to )
+void NFAState::addClassMove( char **s, int to )
 {
     int c, c2, n;
     bool invert = false;

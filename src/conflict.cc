@@ -2,6 +2,7 @@
  * conflict.cc - implementation of lexical conflict classes
  */
 
+#include <assert.h>
 #include "grammar.h"
 #include "lr.h"
 #include "stringset2.h"

@@ -259,11 +259,11 @@ void LRTable::resolveState( int st )
                                     Symbol *sym2 = grammar->symbol(i);
                                     if( sym->prec > sym2->prec ||
                                         (sym->prec == sym2->prec &&
-                                         sym->assoc == left ) ) {
+                                         sym->assoc == assoc_left ) ) {
                                         delete state->edges[i];
                                         state->edges[i] = edge;
                                     } else if( sym->prec == sym2->prec &&
-                                               sym->assoc == none ) {
+                                               sym->assoc == assoc_none ) {
                                         delete state->edges[i];
                                         state->edges[i] = NULL;
                                         edge->lookahead.clear(i);

@@ -5,6 +5,8 @@
 #include "bitset.h"
 #include <vector>
 
+using namespace std;
+
 class StringSet2 {
   public:
     StringSet2( int numSym );
@@ -27,6 +29,10 @@ class StringSet2 {
     bool operator == (const StringSet2 &b) const {
         return hasNull == b.hasNull && firstsym == b.firstsym &&
             firstonly == b.firstonly && second == b.second;
+    }
+    bool operator != (const StringSet2 &b) const {
+        return hasNull != b.hasNull || firstsym != b.firstsym ||
+            firstonly != b.firstonly || second != b.second;
     }
     
   protected:

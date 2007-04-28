@@ -2,12 +2,11 @@
 #include <assert.h>
 #include <vector>
 #include <string>
-#include <hash_map>
+#include "grammar.h"
 #pragma implementation "dfa.h"
 #include "dfa.h"
 #include "nfa.h"
 #include "equiv.h"
-#include "grammar.h"
 #include "conflict.h"
 
 /****************************** Constructors *********************************/
@@ -29,6 +28,8 @@ DFA::~DFA( )
     }
 }
 
+namespace __gnu_cxx {
+
 template <> struct hash< set<int> > {
     size_t operator()( set<int> __s ) const {
         size_t __h = 0;
@@ -37,6 +38,7 @@ template <> struct hash< set<int> > {
         return __h;
     }
 };
+}
 
 /*
  * NFA => DFA Computation
