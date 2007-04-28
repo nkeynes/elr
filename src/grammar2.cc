@@ -307,31 +307,6 @@ void Grammar::printSymbolSet( Bitset &b )
     printf( " }" );
 }
 
-/*
-void Grammar::printTokenString( const TokenString &str )
-{
-    printf( "<" );
-    for( TokenString::const_iterator i = str.begin(); i != str.end(); i++ ) {
-        printf( " %s", symbol(*i)->name->c_str() );
-    }
-    printf( " >" );
-}
-
-
-void Grammar::printStringSet( const StringSet &set )
-{
-    printf( "{" );
-    FOR_EACH( i, Strings, set.max ) {
-        printTokenString( *i );
-        printf( " " );
-    }
-    FOR_EACH( i, Strings, set.rest ) {
-        printTokenString( *i );
-        printf( " " );
-    }
-    printf( " }" );
-}
-*/
 void Grammar::dumpGrammar( void )
 {
     printf( "Symbols: %d\n", numSymbols );
