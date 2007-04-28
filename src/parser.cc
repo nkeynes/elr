@@ -116,7 +116,7 @@
 
 
 /* Copy the first part of user declarations.  */
-#line 4 "parser.y"
+#line 16 "parser.y"
 
 #include <string>
 #include <vector>
@@ -153,7 +153,7 @@ int yyerror( char *s );
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 20 "parser.y"
+#line 32 "parser.y"
 {
     Lexical scan;
     Action *action;
@@ -476,10 +476,10 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    48,    48,    49,    49,    50,    50,    51,    52,    53,
-      54,    56,    57,    58,    59,    60,    62,    65,    68,    69,
-      70,    72,    73,    75,    77,    79,    81,    83,    85,    87,
-      89,    96,    97,    98,    99,   101,   102,   104,   106
+       0,    60,    60,    61,    61,    62,    62,    63,    64,    65,
+      66,    68,    69,    70,    71,    72,    74,    77,    80,    81,
+      82,    84,    85,    87,    89,    91,    93,    95,    97,    99,
+     101,   108,   109,   110,   111,   113,   114,   116,   118
 };
 #endif
 
@@ -1413,119 +1413,119 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 48 "parser.y"
+#line 60 "parser.y"
     { grammar.finalize(); ;}
     break;
 
   case 10:
-#line 54 "parser.y"
+#line 66 "parser.y"
     { grammar.startSymbol = (Nonterminal *)
                                    grammar.lookupIdent( (yyvsp[(2) - (2)].scan).str, (yyvsp[(2) - (2)].scan).posn ); ;}
     break;
 
   case 11:
-#line 56 "parser.y"
+#line 68 "parser.y"
     { grammar.setClass( (yyvsp[(2) - (2)].scan).str ); ;}
     break;
 
   case 12:
-#line 57 "parser.y"
+#line 69 "parser.y"
     { grammar.addCode( (yyvsp[(1) - (1)].scan).str, (yyvsp[(1) - (1)].scan).posn ); ;}
     break;
 
   case 13:
-#line 58 "parser.y"
+#line 70 "parser.y"
     { assoc = assoc_left; prec++; ;}
     break;
 
   case 14:
-#line 59 "parser.y"
+#line 71 "parser.y"
     { assoc = assoc_right; prec++; ;}
     break;
 
   case 15:
-#line 60 "parser.y"
+#line 72 "parser.y"
     { assoc = assoc_none; prec++; ;}
     break;
 
   case 16:
-#line 63 "parser.y"
+#line 75 "parser.y"
     { (yyvsp[(2) - (5)].nt)->setType( (yyvsp[(1) - (5)].scan).str );
           if( grammar.startSymbol == NULL ) grammar.startSymbol = (yyvsp[(2) - (5)].nt); ;}
     break;
 
   case 17:
-#line 66 "parser.y"
+#line 78 "parser.y"
     { grammar.makeLexicalSymbol( (yyvsp[(1) - (6)].scan).str, (yyvsp[(2) - (6)].scan).str, (yyvsp[(4) - (6)].term), (yyvsp[(5) - (6)].action), (yyvsp[(2) - (6)].scan).posn ); ;}
     break;
 
   case 18:
-#line 68 "parser.y"
+#line 80 "parser.y"
     { (yyval.nt) = lhs = grammar.makeNonterminal( (yyvsp[(1) - (1)].scan).str, (yyvsp[(1) - (1)].scan).posn ); ;}
     break;
 
   case 19:
-#line 69 "parser.y"
+#line 81 "parser.y"
     { (yyval.scan) = (yyvsp[(1) - (1)].scan); ;}
     break;
 
   case 20:
-#line 70 "parser.y"
+#line 82 "parser.y"
     { (yyval.scan).str = NULL; (yyval.scan).posn = NO_POSITION ;}
     break;
 
   case 21:
-#line 72 "parser.y"
+#line 84 "parser.y"
     { lhs->rules.push_back((yyvsp[(3) - (3)].rule)); ;}
     break;
 
   case 22:
-#line 73 "parser.y"
+#line 85 "parser.y"
     { lhs->rules.push_back((yyvsp[(1) - (1)].rule)); ;}
     break;
 
   case 23:
-#line 75 "parser.y"
+#line 87 "parser.y"
     { (yyval.rule) = (yyvsp[(2) - (2)].rule); (yyval.rule)->preAction = (yyvsp[(1) - (2)].action); (yyval.rule)->fixReduce();
                                (yyval.rule)->nonterm = lhs; ;}
     break;
 
   case 24:
-#line 77 "parser.y"
+#line 89 "parser.y"
     { (yyval.rule) = (yyvsp[(1) - (3)].rule);
                                   (yyval.rule)->syms.push_back(RuleSymbol((yyvsp[(2) - (3)].sym).sym, (yyvsp[(3) - (3)].action), (yyvsp[(2) - (3)].sym).posn)); ;}
     break;
 
   case 25:
-#line 79 "parser.y"
+#line 91 "parser.y"
     { (yyval.rule) = new Rule(++grammar.numRules); ;}
     break;
 
   case 26:
-#line 81 "parser.y"
+#line 93 "parser.y"
     { (yyval.sym).sym = grammar.lookupIdent( (yyvsp[(1) - (1)].scan).str, (yyvsp[(1) - (1)].scan).posn );
                            (yyval.sym).posn = (yyvsp[(1) - (1)].scan).posn; ;}
     break;
 
   case 27:
-#line 83 "parser.y"
+#line 95 "parser.y"
     { (yyval.sym).sym = grammar.lookupRegexpTerm((yyvsp[(1) - (1)].scan).str, (yyvsp[(1) - (1)].scan).posn);
                            (yyval.sym).posn = (yyvsp[(1) - (1)].scan).posn; ;}
     break;
 
   case 28:
-#line 85 "parser.y"
+#line 97 "parser.y"
     { (yyval.sym).sym = grammar.lookupStringTerm((yyvsp[(1) - (1)].scan).str, (yyvsp[(1) - (1)].scan).posn);
                            (yyval.sym).posn = (yyvsp[(1) - (1)].scan).posn; ;}
     break;
 
   case 29:
-#line 87 "parser.y"
+#line 99 "parser.y"
     { (yyval.sym).sym = grammar.errorTerm; (yyval.sym).posn = (yyvsp[(1) - (1)].scan).posn; ;}
     break;
 
   case 30:
-#line 89 "parser.y"
+#line 101 "parser.y"
     { if( (yyvsp[(2) - (2)].sym).sym->prec != 0 ) 
                                    yyerror("Precedence specified twice"); 
                            else {
@@ -1536,23 +1536,23 @@ yyreduce:
     break;
 
   case 35:
-#line 101 "parser.y"
+#line 113 "parser.y"
     { (yyval.term) = Terminal::fromRegexp((yyvsp[(1) - (1)].scan).str, (yyvsp[(1) - (1)].scan).posn); ;}
     break;
 
   case 36:
-#line 102 "parser.y"
+#line 114 "parser.y"
     { (yyval.term) = Terminal::fromString((yyvsp[(1) - (1)].scan).str, (yyvsp[(1) - (1)].scan).posn); ;}
     break;
 
   case 37:
-#line 104 "parser.y"
+#line 116 "parser.y"
     { (yyval.action) = (yyvsp[(1) - (2)].action);
                                (yyval.action)->push_back( ActionItem( (yyvsp[(2) - (2)].scan).str, (yyvsp[(2) - (2)].scan).posn )); ;}
     break;
 
   case 38:
-#line 106 "parser.y"
+#line 118 "parser.y"
     { (yyval.action) = new Action(); ;}
     break;
 
@@ -1772,7 +1772,7 @@ yyreturn:
 }
 
 
-#line 109 "parser.y"
+#line 121 "parser.y"
 
 int yyerror( char *s )
 {
