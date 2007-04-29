@@ -132,6 +132,10 @@ void CodeGen::handleCommand( char *cmd, int len, FILE *out )
         writeIntegerArray( scanner->def, scanner->baseLen, out );
     } else if( MATCH(cmd,len,"LEXER_ACTION_CODE") ) {
         writeLexerActions( out );        
+    } else if( MATCH(cmd,len,"Id")  ) {
+	fprintf(out, "$%.*s", len, cmd);
+    } else if( len == 0 ) {
+	fprintf(out, "$");
     } else {
         fprintf(stderr, "Unrecognized command in skeleton file: %.*s\n",len,cmd);
     }
@@ -202,7 +206,12 @@ void CodeGen::createSourceFile(void)
     else if( config.outputBase )
         fname = *config.outputBase + sourceExt();
     else BUG( "output base not set!" );
-    skelname = config.skeletonPath + sourceSkel();    
+
+    if( config.skeletonPath[config.skeletonPath.length()-1] != '/' ) {
+	skelname = config.skeletonPath + "/" + sourceSkel();
+    } else {
+	skelname = config.skeletonPath + sourceSkel();    
+    }
     processFile( skelname.c_str(), fname.c_str() );
 }
 
