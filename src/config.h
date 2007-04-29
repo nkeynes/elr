@@ -23,7 +23,6 @@ using namespace std;
 
 #define INPUT_FILE_EXT "elr"
 #define DEBUG_FILE_EXT "out"
-#define SKELETON_PATH "skel/"
 #define DEFAULT_PARSER_NAME "yyparse"
 #define CHARSET_SIZE 257
 #define EOF_CHAR 256
@@ -61,7 +60,7 @@ class Config {
         scannerGen = SG_CONTEXT; parserGen = PG_NORMAL; parserType=PT_LALR;
         parserLookahead = 1; languageGen = LANG_C; genHeader = true;
         outputBase= outputSourceFile= outputHeaderFile= outputDebugFile= NULL;
-        inputFile = NULL; skeletonPath = string(SKELETON_PATH);
+        inputFile = NULL; skeletonPath = string(SKELETON_DIR);
         genDebug = false; verbose=false;
     }
 };

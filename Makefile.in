@@ -550,11 +550,11 @@ uninstall-info: uninstall-info-recursive
 
 install-data-local:
 	@$(NORMAL_INSTALL)
-	if test -d $(srcdir)/skel; then \
+	if test -d $(srcdir)/src/skel; then \
 	  $(mkinstalldirs) $(DESTDIR)$(datadir)/$(PACKAGE)/skel; \
-	  for file in $(srcdir)/skel/*; do \
+	  for file in $(srcdir)/src/skel/*; do \
 	    if test -f $$file; then \
-	      $(INSTALL_DATA) $$pixmap $(DESTDIR)$(datadir)/$(PACKAGE)/skel; \
+	      $(INSTALL_DATA) $$file $(DESTDIR)$(datadir)/$(PACKAGE)/skel; \
 	    fi \
 	  done \
 	fi

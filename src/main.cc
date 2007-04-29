@@ -45,7 +45,7 @@ static char short_options[] = "vo:";
 
 int parseCommandLine( int argc, char *argv[] )
 {
-    config.skeletonPath = SKELETON_PATH;
+    config.skeletonPath = SKELETON_DIR;
     /* parse command line */
     while(1) {
         int this_option_optind = optind ? optind : 1;

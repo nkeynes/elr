@@ -139,7 +139,7 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 
 INCLUDES = \
-        -DPACKAGE_DATA_DIR=\""$(datadir)"\" \
+        -DSKELETON_DIR=\""$(DESTDIR)$(datadir)/$(PACKAGE)/skel"\" \
         -DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\" \
         -Ish4 \
         @PACKAGE_CFLAGS@

@@ -1,7 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
 INCLUDES = \
-        -DPACKAGE_DATA_DIR=\""$(datadir)"\" \
+        -DSKELETON_DIR=\""$(DESTDIR)$(datadir)/$(PACKAGE)/skel"\" \
         -DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\" \
         -Ish4 \
         @PACKAGE_CFLAGS@
