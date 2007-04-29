@@ -1,11 +1,6 @@
 Plan for v1.0
 -------------
 
-Build/deploy
-* Update build system to autoconf/automake.
-* Install target (need to deploy skel somewhere useful)
-* Add copyright headers to everything
-
 Useability
 * Add command-line flags for varying levels of debug output.
 * Better parser conflict debug output
