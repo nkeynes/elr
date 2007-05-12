@@ -155,6 +155,10 @@ Terminal *Grammar::makeLexicalSymbol( string *type, string *name,
         delete name;
         delete action;
     }
+    if( action != NULL && action->size() == 0 ) {
+	delete action;
+	action = NULL;
+    }
     nontermHash[*name] = term;
     term->action = action;
     term->type = type;
@@ -198,6 +202,7 @@ Symbol::Symbol( string *str, Position &pos )
     isNullable = false;
     isReachable = false; /* Set to true when we see the symbol used */
     isPlaceholder = true;
+    isResultUsed = false;
 }    
 
 Terminal::Terminal( string *str, Position &pos ) : Symbol(str, pos)
@@ -252,6 +257,10 @@ ActionItem::ActionItem(  string *act, Position &pos )
 RuleSymbol::RuleSymbol( Symbol *s, Action *a, Position &pos )
 {
     sym = s;
+    if( a != NULL && a->size() == 0 ) {
+	delete a;
+	a = NULL;
+    }
     action = a;
     posn = pos;
     sym->refs++;
