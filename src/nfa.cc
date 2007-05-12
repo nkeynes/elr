@@ -272,7 +272,10 @@ void NFAState::addClassMove( char **s, int to )
     }
     if( **s != ']' )
         WHINGE( "Unexpected end of character class in regexp\n" );
-    if( invert ) on.toggle();
+    if( invert ) { 
+	on.toggle();
+	on.clear(EOF_CHAR);
+    }
     dest = to;
 }
 
