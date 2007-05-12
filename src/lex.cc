@@ -219,6 +219,26 @@ token_t yylex( void )
                 yylval.scan.str = yystrdup( yyhead+1, yych - yyhead-2 );
                 return ACTION;
                 break;
+	    case '/': 
+		NEXT(); 
+		if( *yych == '*' ) { /* comment */
+		    NEXT();
+		    if( !ISEOF() ) {
+			NEXT();
+		    }
+		    while (!ISEOF() && !(*yych == '/' && *(yych-1) == '*') ) {
+			NEXT();
+		    }
+		    NEXT();
+		    continue;
+		} else if( *yych == '/' ) { /* line comment */
+		    while(!ISEOF() && *yych != '\n') {
+			NEXT();
+		    }
+		    NEXT();
+		    continue;
+		}
+		/* fallthrough */
             default:
                 printf( "Illegal character: '%c'\n", *yych );
                 NEXT();
