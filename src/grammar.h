@@ -69,6 +69,7 @@ class Symbol : public Node {
     bool isReachable;
     bool isNullable;
     bool isPlaceholder;
+    bool isResultUsed;
     int refs;
     int prec;
     assoc_t assoc;

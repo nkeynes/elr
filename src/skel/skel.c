@@ -26,8 +26,10 @@
 
 $START_CODE
 
+#include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <assert.h>
@@ -42,60 +44,64 @@ typedef int YY_CHAR;
 
 #define YYP_DEFAULT_STACK_LEN 128
 #define YYL_DEFAULT_BUFFER_LEN 1024
+#define YYL_MIN_BUFFER_FILL 128
 
 #define YYL_MAX_SNARF_LEN 4096*1024 /* Snarf up to a 4Mb file */
-
+#define YYL_END_OF_LINE '\n'
 #ifndef YY_ERROR
-#define YY_ERROR(s) yyError(s)
+#define YY_ERROR(...) yyError(__VA_ARGS__)
 #endif
 
-
+typedef union {
+    $ATTRIBUTES
+} yyattr_t;
 
 typedef struct {
-    char *source;
-    char *str;
-    int line, col, length;
-} yyscan_t;
+    int state;
+    int line, col, pos;
+    int strpos;
+    yyattr_t attr;
+} yystack_t;
 
-typedef union {
-$ATTRIBUTES
-    yyscan_t yyscan;
-} yytype_t;
-
-typedef struct yy_parseable {
+struct yy_parseable {
     char *filename;
     char *buffer;
     int buflen;
-    int bufpos;
+    int bufend; /* end of current data */
     int fd;
     int ismybuffer; /* Whether to free buffer on completion */
     YY_CHAR yylchar;
+    int yylline;
+    int yylcol;
+    int yylfirst;
     int yylpos;
+    int yyllastpos;
     struct yy_parseable *next; /* For file stacking */
 };
 
 /* Function prototypes */
 YYRETVAL $PARSER_NAME( struct yy_parseable yyf );
-int yyfInit( struct yy_parseable *yyf );
-int yyfRelease( struct yy_parseable *yyf );
-int yyError( char *s );
+static int yyfInit( struct yy_parseable *yyf );
+static int yyfRelease( struct yy_parseable *yyf );
+static int yyfFill( struct yy_parseable *yyf );
+static int yyError( char *s, ... );
 
 
 /* Parser tables */
-const int yypNextCheck[$PARSER_NEXTCHECK_LEN][2] = { $PARSER_NEXTCHECK_ARRAY };
-const int yypBase[$PARSER_BASE_LEN] = { $PARSER_BASE_ARRAY };
-const int yypDefault[$PARSER_BASE_LEN] = { $PARSER_DEFAULT_ARRAY };
-const int yypReduceLength[$PARSER_NUM_STATES] = { $PARSER_REDUCE_LEN_ARRAY };
-const int yypReduceToken[$PARSER_NUM_STATES] = { $PARSER_REDUCE_TOK_ARRAY };
-const char *yySymbolName[$NUM_SYMBOLS] = { "ERR", $SYMBOL_NAME_ARRAY };
+static const int yypNextCheck[$PARSER_NEXTCHECK_LEN][2] = { $PARSER_NEXTCHECK_ARRAY };
+static const int yypBase[$PARSER_BASE_LEN] = { $PARSER_BASE_ARRAY };
+static const int yypDefault[$PARSER_BASE_LEN] = { $PARSER_DEFAULT_ARRAY };
+static const int yypReduceLength[$PARSER_NUM_STATES] = { $PARSER_REDUCE_LEN_ARRAY };
+static const int yypReduceToken[$PARSER_NUM_STATES] = { $PARSER_REDUCE_TOK_ARRAY };
+static const char *yySymbolName[$NUM_SYMBOLS] = { "ERR", $SYMBOL_NAME_ARRAY };
 
 /* Lexer tables */
-const int yylNextCheck[$LEXER_NEXTCHECK_LEN][2] = { $LEXER_NEXTCHECK_ARRAY };
-const int yylBase[$LEXER_BASE_LEN] = { $LEXER_BASE_ARRAY };
-const int yylDefault[$LEXER_BASE_LEN] = { $LEXER_DEFAULT_ARRAY };
-const int yylAccept[$LEXER_NUM_STATES] = { $LEXER_ACCEPT_ARRAY };
-const int yylStart[$PARSER_NUM_REAL_STATES] = { $LEXER_START_STATE_ARRAY };
-const int yylEquivClasses[$LEXER_NUM_EQUIV] = { $LEXER_EQUIV_ARRAY };
+static const int yylNextCheck[$LEXER_NEXTCHECK_LEN][2] = { $LEXER_NEXTCHECK_ARRAY };
+static const int yylBase[$LEXER_BASE_LEN] = { $LEXER_BASE_ARRAY };
+static const int yylDefault[$LEXER_BASE_LEN] = { $LEXER_DEFAULT_ARRAY };
+static const int yylAccept[$LEXER_NUM_STATES] = { $LEXER_ACCEPT_ARRAY };
+static const int yylStart[$PARSER_NUM_REAL_STATES] = { $LEXER_START_STATE_ARRAY };
+static const int yylEquivClasses[$LEXER_NUM_EQUIV] = { $LEXER_EQUIV_ARRAY };
 
 
 YYRETVAL ${PARSER_NAME}_file( char *filename )
@@ -103,6 +109,7 @@ YYRETVAL ${PARSER_NAME}_file( char *filename )
     struct yy_parseable yyf;
     
     yyf.filename = filename;
+    yyf.next = NULL;
     yyf.fd = open( filename, O_RDONLY );
     if( yyf.fd == -1 ) return -1;
     yyf.buffer = NULL;
@@ -115,6 +122,7 @@ YYRETVAL ${PARSER_NAME}_snarf_file( char *filename )
     struct stat st;
     
     yyf.filename = filename;
+    yyf.next = NULL;
     yyf.fd = open( filename, O_RDONLY );
     if( yyf.fd == -1 ) return -1;
 
@@ -127,7 +135,7 @@ YYRETVAL ${PARSER_NAME}_snarf_file( char *filename )
         if( yyf.buffer ) {
             yyf.buflen = st.st_size;
             yyf.ismybuffer = 1;
-            yyf.buflen = read( yyf.fd, yyf.buffer, yyf.buflen );
+            yyf.bufend = read( yyf.fd, yyf.buffer, yyf.buflen );
         }
     }
     return $PARSER_NAME(yyf);    
@@ -139,8 +147,9 @@ YYRETVAL ${PARSER_NAME}_buffer( char *buf, int len )
     struct yy_parseable yyf;
 
     yyf.filename = NULL;
+    yyf.next = NULL;
     yyf.buffer = buf;
-    yyf.buflen = len;
+    yyf.buflen = yyf.bufend = len;
     yyf.fd = -1;
     yyf.ismybuffer = 0;
     return $PARSER_NAME( yyf );
@@ -150,6 +159,7 @@ YYRETVAL ${PARSER_NAME}_stream( int fd )
 {
     struct yy_parseable yyf;
     
+    yyf.next = NULL;
     yyf.fd = fd;
     yyf.buffer = NULL;
     yyf.filename = NULL;
@@ -158,8 +168,9 @@ YYRETVAL ${PARSER_NAME}_stream( int fd )
 
 
 /* Parser macros */
-#define YYP_PUSH(state,attr) { yypstatestack[yypstacktop] = state; \
-                            yypattrstack[yypstacktop] = attr; yypstacktop++; }
+#define YYP_PUSH(st,a) { yypstack[yypstacktop].state = st; \
+ 	                       yypstack[yypstacktop].attr = a; \
+                               yypstacktop++; }
 
 int __inline__ YYP_GOTO( int state, int token ){
     int yypnextstate = state, yypidx;
@@ -175,8 +186,6 @@ int __inline__ YYP_GOTO( int state, int token ){
 }
 
 /* Lexer macros */
-#define YYL_NEXT(yyf) if( yyf.buflen <= yyf.yylpos ){ yyf.yylchar = yylEquivClasses[$LEXER_EOF_CHAR]; yyf.yylpos++; }else yyf.yylchar = (yylEquivClasses[yyf.buffer[yyf.yylpos++]])
-
 int __inline__ YYL_GOTO( int state, int token ){
     int yylnextstate = state, yylidx;
     do {
@@ -189,6 +198,26 @@ int __inline__ YYL_GOTO( int state, int token ){
     return yylnextstate;
 }
 
+#define YYL_PRE_ACTION() yyf.yylchar = yyf.buffer[yyf.yylpos]; yyf.buffer[yyf.yylpos] = '\0'
+#define YYL_POST_ACTION() yyf.buffer[yyf.yylpos] = yyf.yylchar
+#define YYL_TEXT() (yyf.buffer + yyf.yylfirst)
+
+#define YYL_SAVE_TEXT() yylstrlen = yyf.yylpos - yyf.yylfirst + 1;
+
+#define YYP_PUSH_TEXT( ) {						\
+	if( yypstrstacklen - yypstrstacktop < yylstrlen ) {		\
+	    if( (yypstrstacklen << 1) < (yypstrstacktop + yylstrlen) ) {	\
+		yypstrstacklen = yypstrstacktop + yylstrlen;		\
+	    } else {							\
+		yypstrstacklen = yypstrstacklen << 1;			\
+	    }								\
+	    yypstrstack = realloc( yypstrstack, yypstrstacklen );	\
+	}								\
+	memcpy( yypstrstack + yypstrstacktop, yyf.buffer + yyf.yylfirst, yylstrlen-1 ); \
+	yypstrstacktop += yylstrlen;					\
+	yypstrstack[yypstrstacktop-1] = '\0';				\
+    }
+
 YYRETVAL $PARSER_NAME( struct yy_parseable yyf )
 {
     int yytoken;
@@ -197,27 +226,31 @@ YYRETVAL $PARSER_NAME( struct yy_parseable yyf )
     int yyperrorcount = 0;
 
     /* Lexer variables */
-    int yylstate, yylnextstate, yylfirst;
-    int yyllastpos, yyllastaccept, yyllastchar;
+    int yylstate, yylnextstate;
+    int yyllastaccept;
+    int yylline, yylcol, yylpos, yylstrpos;
+    int yylstrlen = 0;
+
+    /* String stack */
+    char *yypstrstack;
+    int yypstrstacklen = YYL_DEFAULT_BUFFER_LEN;
+    int yypstrstacktop = 0;
     
-    int *yypstatestack;
-    yytype_t *yypattrstack;
-    yytype_t yypsynattr, yylsynattr;
+    yystack_t *yypstack;
+    yyattr_t yylsynattr, yypsynattr;
     int yypstacklen = YYP_DEFAULT_STACK_LEN;
     int yypstacktop = 0;
 
     yyfInit( &yyf );
-    YYL_NEXT(yyf);
     
-    yypstatestack = (int *)malloc( YYP_DEFAULT_STACK_LEN * sizeof(int) );
-    yypattrstack = (yytype_t *)malloc( YYP_DEFAULT_STACK_LEN * sizeof(yytype_t) );
+    yypstack = (yystack_t *)malloc( YYP_DEFAULT_STACK_LEN * sizeof(yystack_t) );
+    yypstrstack = (char *)malloc( YYL_DEFAULT_BUFFER_LEN );
     
     while( yypstate != $PARSER_ACCEPT_STATE ) { /* While not accepting */
         /* Check stack size */ /* FIXME: Error checking */
         if( yypstacktop == yypstacklen ) {
             yypstacklen <<= 1;
-            yypstatestack = (int *)realloc( yypstatestack, yypstacklen );
-            yypattrstack = (yytype_t *)realloc( yypattrstack, yypstacklen );
+            yypstack = (yystack_t *)realloc( yypstack, yypstacklen * sizeof(yystack_t) );
         }
         
         /* Read a token */
@@ -225,10 +258,27 @@ YYRETVAL $PARSER_NAME( struct yy_parseable yyf )
 /************************** Lexical Analysis Section *************************/
       lexer:
         yylstate = yylStart[yypstate];
-        yylfirst = yyf.yylpos-1;
         yyllastaccept = -1;
+	yylline = yyf.yylline;
+	yylcol = yyf.yylcol;
+	yylpos = yyf.yylfirst = yyf.yylpos;
+	yylstrpos = yypstrstacktop;
+	yylstrlen = 0;
 
         while( 1 ) {
+	    /*************** Read next character ******************/
+	    if( yyf.bufend <= yyf.yylpos && !yyfFill( &yyf ) ){
+		yyf.yylchar = yylEquivClasses[$LEXER_EOF_CHAR]; 
+		yyf.yylpos++;					
+	    } else {						
+		if( yyf.buffer[yyf.yylpos] == YYL_END_OF_LINE ) {	
+		    yyf.yylline++;				
+		    yyf.yylcol = 1;				
+		} else {					
+		    yyf.yylcol++;				
+		}						  
+		yyf.yylchar = (yylEquivClasses[yyf.buffer[yyf.yylpos++]]);
+	    }
 
             /* Lookup transition table */
             yylnextstate = YYL_GOTO(yylstate, yyf.yylchar);
@@ -236,50 +286,44 @@ YYRETVAL $PARSER_NAME( struct yy_parseable yyf )
             if( yylnextstate == $LEXER_NO_STATE ) {
                 if( yyllastaccept == $LEXER_EOF_TOKEN &&
                         yyfRelease( &yyf ) == 1 ) {
-                    yylfirst = yyf.yylpos-1;
+                    yyf.yylfirst = yyf.yylpos-1;
 		    yyllastaccept = -1;
                     yylstate = yylStart[yypstate];
-                } else switch( yyllastaccept ) {
+		    yylline = yylcol = 1;
+                } else if( yyllastaccept == -1 ) {
+		    /* We haven't encountered a valid string - ERROR
+		     * Try to recover by dropping the first character and
+		     * starting again
+		     */
+		    YY_ERROR( "Unscannable string\n" );
+		    yyf.yylline = yylline;
+		    yyf.yylcol = yylcol;
+		    yyf.yylpos = yylpos = ++yyf.yylfirst;
+		    yylstate = yylStart[yypstate];
+		} else {
+		    yyf.yylpos = yyf.yyllastpos;
+		    switch( yyllastaccept ) {
 $LEXER_ACTION_CODE;
                     default:
                         /* Have a valid accept state */
                         goto accept;
-                    case -1:
-                        /* We haven't encountered a valid string - ERROR
-                         * Try to recover by dropping the first character and
-                         * starting again
-                         */
-                        YY_ERROR( "Unscannable string" );
-                        if( yyf.yylpos == yylfirst+1 ) {
-                            YYL_NEXT(yyf);
-                            yylfirst = yyf.yylpos-1;
-                        } else {
-                            yyf.yylpos = ++yylfirst+1;
-                            yyf.yylchar = yylEquivClasses[yyf.buffer[yylfirst]];
-                        }
-                        yylstate = yylStart[yypstate];
-                        break;
-                        
+		    }
                 }
             } else {
-                YYL_NEXT(yyf);
                 yylstate = yylnextstate;
                 if( yylAccept[yylstate] != -1 ) {
                     /* Potentially accepting state, save for backtracking */
-                    yyllastpos = yyf.yylpos;
+                    yyf.yyllastpos = yyf.yylpos;
                     yyllastaccept = yylAccept[yylstate];
-		    yyllastchar = yyf.yylchar;
                 }
             }
         }
       accept:
-        yyf.yylchar = yyllastchar;
-        yyf.yylpos = yyllastpos;
         yytoken = yyllastaccept;
 
 #ifdef DEBUG
 	if( yyf.buffer )
-	    printf( "Scanned: %s (%.*s)\n", yySymbolName[yytoken], yyf.yylpos-yylfirst-1, yyf.buffer+yylfirst );
+	    printf( "Scanned: %s (%.*s)\n", yySymbolName[yytoken], yyf.yylpos-yyf.yylfirst, yyf.buffer+yyf.yylfirst );
 	else
 	    printf( "Scanned: %s\n", yySymbolName[yytoken] );
 #endif /* DEBUG */
@@ -298,93 +342,130 @@ $LEXER_ACTION_CODE;
                         goto fini;
                     break; /* drop token on the floor */
                 }
-		YY_ERROR( "Unexpected token" );
+		YY_ERROR( "Unexpected token: %s\n", yySymbolName[yytoken] );
                 yyperrorcount++;
                 do {
                     yypnextstate = YYP_GOTO( yypstate, $PARSER_ERROR_TOKEN );
                     if( yypnextstate != $PARSER_NO_STATE ) break;
                     if( yypstacktop == 0 ) goto fini;
-                    yypstate = yypstatestack[--yypstacktop];
-		    YY_ERROR( "Pop" );
+                    yypstate = yypstack[--yypstacktop].state;
+		    YY_ERROR( "Pop\n" );
                 } while( 1 );
                 //yypstatestack++; /* no meaningful yylsynattr */
                 //yypstate = yypnextstate;
                 yyprecovering = 1;
             }
         
-            if ( yypnextstate >= $PARSER_FIRST_REDUCE_STATE ) {
-                if( yypnextstate <= $PARSER_LAST_SHIFT_STATE ) {
-                    /* Shift action: push state, attrs */
-                    YYP_PUSH( yypstate, yylsynattr );
-                    yytoken = -1;
-                    yyprecovering = 0;
-                }
-                
-                do { /* Reduce */
-                    /* pop stack */
-                    if( yypReduceLength[yypnextstate] ) {
-                        yypstacktop -= yypReduceLength[yypnextstate];
-                    
-                    /* set state to old state */
-                        yypstate = yypstatestack[yypstacktop];
-                    }
-                    
-                    /* Execute action (if any) */
-                    switch( yypnextstate ) {
-$PARSER_ACTION_CODE;
-                        default:
-                            yypsynattr = yypattrstack[yypstacktop];
-                    } 
-                    
-                    /* Push the result of the reduction onto the stack */
-                    YYP_PUSH( yypstate, yypsynattr );
-                    
-                    if( yypnextstate == $PARSER_ACCEPT_STATE ) {
-                        yytoken = -1;
-                        break;
-                    }
-#ifdef DEBUG
-                    printf( "Shift %s => ", yySymbolName[yypReduceToken[yypnextstate]] );
-#endif /* DEBUG */
-                    yypnextstate = YYP_GOTO( yypstate,
-                                             yypReduceToken[yypnextstate] );
-#ifdef DEBUG
-                    printf( "%d\n", yypnextstate );
-#endif /* DEBUG */
-                    assert( yypstate != $PARSER_NO_STATE );
-                } while ( yypnextstate >= $PARSER_FIRST_REDUCE_STATE );
-                yypstate = yypnextstate;
-            }
-            else {
-                /* Shift action: push state, attrs */
-                YYP_PUSH( yypstate, yylsynattr );
+	    if( yypnextstate <= $PARSER_LAST_SHIFT_STATE ) {
+		/* Shift action (terminal): push state, attrs */
 #ifdef DEBUG
                 printf( "Shift %s => %d\n", yySymbolName[yytoken], yypnextstate );
 #endif /* DEBUG */
-                yypstate = yypnextstate;
-                yyprecovering = 0;
-                break;
-            }
+		if( yylstrlen ) {
+		    YYP_PUSH_TEXT();
+		}
+		yypstack[yypstacktop].strpos = yylstrpos;
+		yypstack[yypstacktop].line = yylline;
+		yypstack[yypstacktop].col = yylcol;
+		yypstack[yypstacktop].pos = yylpos;
+		YYP_PUSH( yypstate, yylsynattr );
+		yytoken = -1;
+		yyprecovering = 0;
+	    }
+                
+            while ( yypnextstate >= $PARSER_FIRST_REDUCE_STATE ) {
+		/* Reduce action -  pop stack */
+		if( yypReduceLength[yypnextstate] ) {
+		    yypstacktop -= yypReduceLength[yypnextstate];
+                    
+                    /* set state to old state */
+		    yypstate = yypstack[yypstacktop].state;
+		}
+		yypstrstacktop = yypstack[yypstacktop].strpos;
+                    
+		/* Execute action (if any) */
+		switch( yypnextstate ) {
+$PARSER_ACTION_CODE;
+		default:
+		    yypsynattr = yypstack[yypstacktop].attr;
+		} 
+                    
+		/* Push the result of the reduction onto the stack */
+		YYP_PUSH( yypstate, yypsynattr );
+                
+		if( yypnextstate == $PARSER_ACCEPT_STATE ) {
+		    goto fini;
+		}
+#ifdef DEBUG
+		printf( "Shift %s => ", yySymbolName[yypReduceToken[yypnextstate]] );
+#endif /* DEBUG */
+		yypnextstate = YYP_GOTO( yypstate,
+					 yypReduceToken[yypnextstate] );
+#ifdef DEBUG
+		printf( "%d\n", yypnextstate );
+#endif /* DEBUG */
+		assert( yypstate != $PARSER_NO_STATE );
+	    }
+	    yypstate = yypnextstate;
         } while( yytoken != -1 );
 
 /* Assert: scanned token is consumed by this point */
     }
 
   fini:
+    yyfRelease( &yyf );
+    free( yypstack );
     return yyperrorcount;
 }
 
 int yyfInit( struct yy_parseable *yyf )
 {
+    yyf->yylfirst = 0;
     yyf->yylpos = 0;
+    yyf->yylline = 1;
+    yyf->yylcol = 1;
     if( yyf->buffer == NULL ) {
         yyf->buffer = (char *)malloc( YYL_DEFAULT_BUFFER_LEN );
+	yyf->bufend = 0;
         yyf->buflen = YYL_DEFAULT_BUFFER_LEN;
         yyf->ismybuffer = 1;
+	
     }
 }
 
-int yyfRelease( struct yy_parseable *yyf )
+/**
+ * Move yylfirst .. yylpos to the front of the buffer, and fill the remainder
+ * of the buffer with data. If the buffer is full (or nearly so), extend the
+ * buffer and fill the extended region as well.
+ *
+ * @return 1 if at least some data was read, 0 if we've reached EOF
+ */
+static int yyfFill( struct yy_parseable *yyf )
+{
+    int len;
+    if( yyf->buffer != NULL ) {
+	if( yyf->yylfirst > 0 ) {
+	    memmove( yyf->buffer, yyf->buffer + yyf->yylfirst, yyf->bufend - yyf->yylfirst );
+	    yyf->bufend -= yyf->yylfirst;
+	    yyf->yylpos -= yyf->yylfirst;
+	    yyf->yyllastpos -= yyf->yylfirst;
+	    yyf->yylfirst = 0;
+	}
+	if( yyf->buflen - yyf->bufend < YYL_MIN_BUFFER_FILL ) {
+	    char *tmp = realloc( yyf->buffer, yyf->buflen << 1 );
+	    yyf->buffer = tmp;
+	    yyf->buflen = yyf->buflen << 1;
+	}
+	len = read( yyf->fd, yyf->buffer + yyf->bufend, yyf->buflen - yyf->bufend );
+	if( len > 0 ) {
+	    yyf->bufend += len;
+	    return 1;
+	}
+    }
+    return 0;
+}
+
+static int yyfRelease( struct yy_parseable *yyf )
 {
     if( yyf->ismybuffer && yyf->buffer ) {
         free(yyf->buffer);
@@ -403,7 +484,7 @@ int yyfRelease( struct yy_parseable *yyf )
     return 0;
 }
 
-int yyfPushFile( struct yy_parseable *yyf, char *filename )
+static int yyfPushFile( struct yy_parseable *yyf, char *filename )
 {
     struct yy_parseable *next = (struct yy_parseable *)malloc( sizeof(struct yy_parseable) );
     *next = *yyf;
@@ -411,9 +492,13 @@ int yyfPushFile( struct yy_parseable *yyf, char *filename )
     yyf->fd = open( filename, O_RDONLY );
 }
 
-int yyError( char *s )
+static int yyError( char *s, ... )
 {
-    fprintf( stderr, "Parse error: %s\n", s );
+    va_list ap;
+
+    va_start( ap, s );
+    vfprintf( stderr, s, ap );
+    va_end( ap );
 }
 
 $END_CODE

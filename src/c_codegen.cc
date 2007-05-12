@@ -36,7 +36,7 @@ void C_CodeGen::writeStringConst( const char *s, FILE * out )
 {
     fputc( '\"', out );
     while( *s ) {
-        if( *s == '\"' ) fputc( '\\', out );
+        if( *s == '\"' || *s == '\\' ) fputc( '\\', out );
         fputc( *s++, out );
     }
     fputc( '\"', out );
@@ -83,38 +83,53 @@ void C_CodeGen::writeLexerActions( FILE *out )
 {
     FOR_EACH( term, TerminalPs, grammar->terms ) {
         if( (*term)->action ) {
-            fprintf( out, "                    case %d:\n                    ",
-                     (*term)->symbolId );
+            fprintf( out, "                    case %d: // %s \n",
+                     (*term)->symbolId, (*term)->name->c_str() );
+	    fprintf( out, "                        YYL_PRE_ACTION();\n" );
+	    fprintf( out, "                        " );
             FOR_EACH( act, Action, (*(*term)->action) ) {
-                writeActionCode( NULL, act->action->c_str(), out );
+                writeActionCode( *term, act->action->c_str(), out );
             }
-            fprintf( out, "                        goto accept;\n" );
-        }
+	    fprintf( out, "                        YYL_POST_ACTION();\n" );
+            fprintf( out, "\n                        goto accept;\n" );
+	}
     }
+
+
+    int count = 0;
+    FOR_EACH( term, TerminalPs, grammar->terms ) {
+        if( (*term)->action == NULL && (*term)->isResultUsed ) {
+	    fprintf( out, "                    case %d: // %s \n",		     
+                     (*term)->symbolId, (*term)->name->c_str() );
+	    count++;
+	}
+    }
+    if( count > 0 ) {
+	fprintf( out, "                        YYL_SAVE_TEXT();\n" );
+	fprintf( out, "                        goto accept;\n" );
+    }	    
+}
+
+void C_CodeGen::writeAttrCode( const Terminal *t, FILE *out )
+{
+    fprintf( out, "YYL_TEXT()" );
 }
 
 void C_CodeGen::writeAttrCode( const Rule *r, int n, FILE *out )
 {
-    if( !r ) {
-        fprintf( out, "(yyf.buffer+yylfirst)" );
-        return;
-    }
     assert( n > 0 && n <= r->length() );
     
     Symbol *sym = r->syms[n-1].sym;
 
-    fprintf( out, "yypattrstack[yypstacktop+%d]", n - 1 );
-    if( sym->isTerminal )
-        fprintf( out, ".yyscan" );
-    else
-        fprintf( out, ".yy%s", sym->name->c_str() );
+    if( sym->isTerminal && sym->type == NULL ) {
+	fprintf( out, "(yypstrstack + yypstack[yypstacktop+%d].strpos)", n-1 );
+    } else {
+        fprintf( out, "yypstack[yypstacktop+%d].attr.yy%s", n-1, sym->name->c_str() );
+    }
     
 }
 
-void C_CodeGen::writeSynthAttrCode( const Rule *r, FILE *out )
+void C_CodeGen::writeSynthAttrCode( const Symbol *s, FILE *out )
 {
-    if( r )
-        fprintf( out, "yypsynattr.yy%s", r->nonterm->name->c_str() );
-    else
-        fprintf( out, "yylsynattr.yyscan" );
+    fprintf( out, "%s.yy%s", (s->isTerminal ? "yylsynattr" : "yypsynattr"), s->name->c_str() );
 }

@@ -50,7 +50,7 @@ void CodeGen::handleCommand( char *cmd, int len, FILE *out )
 /* Generic */
     if( MATCH(cmd,len,"START_CODE") ) {
 	FOR_EACH( act, Action, grammar->code ) {
-                writeActionCode( NULL, act->action->c_str(), out );
+	    fprintf( out, "%s", act->action->c_str() );
 	}
     } else if( MATCH(cmd,len,"END_CODE") ) {
     } else if( MATCH(cmd,len,"ATTRIBUTES") ) {
@@ -256,6 +256,10 @@ void CodeGen::writeEscapedString( const char *s, FILE *out )
 
 void CodeGen::writeAttributes( FILE *out )
 {
+    FOR_EACH( t, TerminalPs, grammar->terms ) {
+	if( (*t)->type )
+	    writeMemberVar( (*t)->type->c_str(), (*t)->name->c_str(), out );
+    }
     FOR_EACH( nt, NonterminalPs, grammar->nonterms ) {
         if ( (*nt)->type )
             writeMemberVar( (*nt)->type->c_str(), (*nt)->name->c_str(), out );
@@ -276,7 +280,7 @@ void CodeGen::writeActionCode( const Rule *r, const char *s, FILE *out )
     while( *s ) {
         if( *s == '$' ) {
             if( *++s == '$' ) {
-                writeSynthAttrCode( r, out );
+                writeSynthAttrCode( r->nonterm, out );
                 s++;
             } else if( isdigit( *s ) ) {
                 char *p;
@@ -302,3 +306,66 @@ void CodeGen::writeActionCode( const Rule *r, const char *s, FILE *out )
         }
     }
 }
+
+
+void CodeGen::writeActionCode( const Terminal *t, const char *s, FILE *out )
+{
+    while( *s ) {
+        if( *s == '$' ) {
+            if( *++s == '$' ) {
+                writeSynthAttrCode( t, out );
+                s++;
+            } else if( isdigit( *s ) ) {
+                char *p;
+                int v = strtol( s, &p, 10 );
+                if( p == NULL ) /* Can't happen */
+                    BUG( "strtol failed! Holy sh*t..." );
+		if( v != 1 )
+		    fprintf( stderr, "Attribute outside of rule: %d\n", v );
+                else
+		    writeAttrCode( t, out );
+                s = p;
+            }
+            else fputc( '$', out );
+        }
+        else {
+            fputc( *s, out );
+            s++;
+        }
+    }
+}
+
+void CodeGen::computeSymbolUses( )
+{
+    FOR_EACH( nt, NonterminalPs, grammar->nonterms ) {
+        FOR_EACH( rule, RulePs, (*nt)->rules ) {
+	    if( (*rule)->reduceAction ) {
+                FOR_EACH( act, Action, (*(*rule)->reduceAction) ) {
+		    const char *s = act->action->c_str();
+		    computeSymbolUses(*rule,s);
+		}
+	    }
+	}
+    }
+}
+
+void CodeGen::computeSymbolUses( Rule *rule, const char *s ) 
+{
+    while( *s ) {
+	if( *s == '$' ) {
+	    if( isdigit( *++s ) ) {
+		char *p;
+		int v = strtol( s, &p, 10 );
+		if( p == NULL ) /* Can't happen */
+		    BUG( "strtol failed! Holy sh*t..." );
+		if( v > 0 && v <= rule->length() ) {
+		    rule->syms[v-1].sym->isResultUsed = true;
+		}
+		s = p;
+	    }
+	} else {
+	    s++;
+	}
+    }
+}
+
