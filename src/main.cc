@@ -40,8 +40,9 @@ static struct option long_options[] = {
     {"lalr",0,0,OPT_LALR},
     {"output",1,0,'o'},
     {"language",1,0,3},
+    {"skeleton-path",1,0,'S'},
         {0,0,0,0} };
-static char short_options[] = "vo:";
+static char short_options[] = "vo:S:";
 
 int parseCommandLine( int argc, char *argv[] )
 {
@@ -50,16 +51,17 @@ int parseCommandLine( int argc, char *argv[] )
     while(1) {
         int this_option_optind = optind ? optind : 1;
         int option_index = 0;
-
+	
         int c = getopt_long( argc, argv, short_options, long_options,
                          &option_index );
         if( c == EOF )
             break;
         switch(c) {
-            case OPT_YACC: config.outputGen = OUT_YACC; break;
-            case OPT_LALR: config.outputGen = OUT_LALR; break;
-            case 'o': config.outputSourceFile = new string(optarg); break;
-            case 'v': config.verbose = true;
+	case OPT_YACC: config.outputGen = OUT_YACC; break;
+	case OPT_LALR: config.outputGen = OUT_LALR; break;
+	case 'o': config.outputSourceFile = new string(optarg); break;
+	case 'v': config.verbose = true;
+	case 'S': config.skeletonPath = string(optarg); break;
         }
     }
     while( optind < argc ) {
@@ -128,7 +130,7 @@ int main( int argc, char *argv[] )
     fprintf( stderr, "Done\n");
     grammar.dfa->computeAccepts(grammar);
     grammar.dfa->computePredSets();
-//    grammar.dfa->print(stdout);
+    grammar.dfa->print(stdout);
     LRTable *lr = new LRTable( &grammar );
     fprintf( stderr, "Computing LR(0)...\n");
     lr->constructPDA();
