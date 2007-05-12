@@ -1,0 +1,27 @@
+/*
+ * Simple configuration-style file used for lexical + skel tests
+ */
+%{
+#define DEBUG 1
+}
+
+config: config item optional_NL
+      |
+      ;
+
+item: rulegroup | rule 
+    ;
+
+rulegroup: '[' IDENT ']' { printf( "group: %s\n", $2 ); }
+         ;
+
+rule: IDENT '=' "[^ \t\v\r\n][^\n]*" { printf( "%s: %s\n", $1, $3 ); }
+    | IDENT ':=' NUMBER  { printf( "%s: %d\n", $1, $3 ); }
+    ;
+
+optional_NL: NL | ;
+
+NL = "\n[ \t\v\r\n]*";
+WHITESPACE = "[ \t\v\r]+";
+IDENT =  "[A-Za-z_][_A-Za-z0-9]*";
+(int) NUMBER = "[0-9]+" { $$ = strtol($1,NULL,0); } ;
