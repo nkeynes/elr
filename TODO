@@ -5,6 +5,7 @@ Useability
 * Add command-line flags for varying levels of debug output.
 * Better parser conflict debug output
 * Better error reporting
+* Named vars could be nice
 
 Performance
 * Implement comb-vector algorithm as per the dragon book
