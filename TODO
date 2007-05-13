@@ -18,8 +18,7 @@ Features
 * Implement EBNF parser
     - see nakata/sassa paper, etc
 * Implement minimal-state LR(1)
-    - see the paper (don't think I still have the files, but shouldn't be
-      hard to find)
+    - see pager, spector
 * Case-insensitive lexical support
 * Option to disable conflict resolution
 * Implement more advanced regular expression support. In particular:
@@ -34,7 +33,6 @@ Features
 
 Testing
 * Unit tests
-    - Find a good C++ test framework?
-* Automated test cases
-    - Possibly steal some of the bison / flex cases
+    - framework?
+* System test cases
 
