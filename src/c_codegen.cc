@@ -60,7 +60,7 @@ void C_CodeGen::writeParserActions( FILE *out )
             fprintf( out, "                case %d:\n                    ",
                      (*rule)->ruleId + lr->states.size()-1 );
             if( config.genDebug ) {
-                fprintf( out, "printf(\"Reducing %s ->",
+                fprintf( out, "YY_DEBUG(\"Reducing %s ->",
                          (*rule)->nonterm->name->c_str() );
                 FOR_EACH( sym, RuleSymbols, (*rule)->syms ) {
                     fputc( ' ', out );

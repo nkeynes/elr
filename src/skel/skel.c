@@ -43,13 +43,25 @@ $START_CODE
 typedef int YY_CHAR;
 
 #define YYP_DEFAULT_STACK_LEN 128
+
+#ifndef YYL_DEFAULT_BUFFER_LEN
 #define YYL_DEFAULT_BUFFER_LEN 1024
+#endif
+#ifndef YYL_MIN_BUFFER_FILL
 #define YYL_MIN_BUFFER_FILL 128
+#endif
 
 #define YYL_MAX_SNARF_LEN 4096*1024 /* Snarf up to a 4Mb file */
 #define YYL_END_OF_LINE '\n'
 #ifndef YY_ERROR
 #define YY_ERROR(...) yyError(__VA_ARGS__)
+#endif
+#ifndef YY_DEBUG
+#ifdef DEBUG
+#define YY_DEBUG(...) printf(__VA_ARGS__)
+#else
+#define YY_DEBUG(...)
+#endif
 #endif
 
 typedef union {
@@ -127,7 +139,7 @@ YYRETVAL ${PARSER_NAME}_snarf_file( char *filename )
     if( yyf.fd == -1 ) return -1;
 
     if( fstat( yyf.fd, &st ) == -1 ) {
-        fprintf( stderr, "Unable to stat file (%s)\n", strerror(errno) );
+        YY_ERROR( "Unable to stat file (%s)\n", strerror(errno) );
         return -1;
     }
     if( S_ISREG(st.st_mode) && st.st_size < YYL_MAX_SNARF_LEN ) {
@@ -321,12 +333,11 @@ $LEXER_ACTION_CODE;
       accept:
         yytoken = yyllastaccept;
 
-#ifdef DEBUG
-	if( yyf.buffer )
-	    printf( "Scanned: %s (%.*s)\n", yySymbolName[yytoken], yyf.yylpos-yyf.yylfirst, yyf.buffer+yyf.yylfirst );
-	else
-	    printf( "Scanned: %s\n", yySymbolName[yytoken] );
-#endif /* DEBUG */
+	if( yyf.buffer ) {
+	    YY_DEBUG( "Scanned: %s ('%.*s')\n", yySymbolName[yytoken], yyf.yylpos-yyf.yylfirst, yyf.buffer+yyf.yylfirst );
+	} else {
+	    YY_DEBUG( "Scanned: %s\n", yySymbolName[yytoken] );
+	}
 
         if( yytoken == $LEXER_SPACE_TOKEN ) goto lexer;
 /************************ End Lexical Analysis Section ***********************/
@@ -358,9 +369,7 @@ $LEXER_ACTION_CODE;
         
 	    if( yypnextstate <= $PARSER_LAST_SHIFT_STATE ) {
 		/* Shift action (terminal): push state, attrs */
-#ifdef DEBUG
-                printf( "Shift %s => %d\n", yySymbolName[yytoken], yypnextstate );
-#endif /* DEBUG */
+                YY_DEBUG( "Shift %s => %d\n", yySymbolName[yytoken], yypnextstate );
 		if( yylstrlen ) {
 		    YYP_PUSH_TEXT();
 		}
@@ -396,14 +405,10 @@ $PARSER_ACTION_CODE;
 		if( yypnextstate == $PARSER_ACCEPT_STATE ) {
 		    goto fini;
 		}
-#ifdef DEBUG
-		printf( "Shift %s => ", yySymbolName[yypReduceToken[yypnextstate]] );
-#endif /* DEBUG */
+		YY_DEBUG( "Shift %s => %d\n", yySymbolName[yypReduceToken[yypnextstate]],
+			  YYP_GOTO( yypstate, yypReduceToken[yypnextstate] ) );
 		yypnextstate = YYP_GOTO( yypstate,
 					 yypReduceToken[yypnextstate] );
-#ifdef DEBUG
-		printf( "%d\n", yypnextstate );
-#endif /* DEBUG */
 		assert( yypstate != $PARSER_NO_STATE );
 	    }
 	    yypstate = yypnextstate;
