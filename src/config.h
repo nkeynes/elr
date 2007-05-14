@@ -61,7 +61,7 @@ class Config {
         parserLookahead = 1; languageGen = LANG_C; genHeader = true;
         outputBase= outputSourceFile= outputHeaderFile= outputDebugFile= NULL;
         inputFile = NULL; skeletonPath = string(SKELETON_DIR);
-        genDebug = false; verbose=false;
+        genDebug = true; verbose=false;
     }
 };
 
