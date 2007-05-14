@@ -3,6 +3,8 @@
  */
 %{
 #define DEBUG 1
+#define YYL_DEFAULT_BUFFER_LEN 16
+#define YYL_MIN_BUFFER_FILL 4
 }
 
 config: config item optional_NL
