@@ -322,6 +322,11 @@ void Grammar::printSymbolSet( Bitset &b )
     printf( " }" );
 }
 
+void Grammar::printSymbolSet( StringSet2 &s )
+{
+    s.print(this);
+}    
+
 void Grammar::dumpGrammar( void )
 {
     printf( "Symbols: %d\n", numSymbols );
@@ -343,7 +348,7 @@ void Grammar::dumpGrammar( void )
                      (*i)->name->c_str() );
 //        if( (*i)->follows )
 //            printStringSet( (*i)->first );
-        if( (*i)->first ) (*i)->first->print();
+        if( (*i)->first ) (*i)->first->print(this);
         printf( ":\n" );
         FOR_EACH( j, RulePs, (*i)->rules ) {
             printf( "     (Rule %d) -> ", (*j)->ruleId );

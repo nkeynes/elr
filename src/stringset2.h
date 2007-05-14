@@ -22,6 +22,10 @@
 
 using namespace std;
 
+typedef char *(*string_format_fn)(int n);
+
+class Grammar;
+
 class StringSet2 {
   public:
     StringSet2( int numSym );
@@ -34,7 +38,7 @@ class StringSet2 {
     void deleteEmpty( void ) { hasNull = false; }
     void append( StringSet2 &with );
     void append( int token );
-    void print( void );
+    void print( Grammar *g );
 
     Bitset *first( void );
     Bitset *follows( int token );

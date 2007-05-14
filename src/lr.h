@@ -94,6 +94,7 @@ class LRTable : public CombSource {
     int acceptState;
     
     int *reduceLengths, *reduceTokens;
+    int unresolvedConflicts;
 
     LRTable( Grammar *g );
     ~LRTable( );
@@ -132,6 +133,8 @@ class LRTable : public CombSource {
     void lalrksub( const LRItem &item, int state, int k, StringSet2 &result,
                    set <const LRItem *> &done );
     void firstk( StringSet2 &result, const LRItem &item );
+
+    void reportConflict( int state, const LREdge *edge1, const LREdge *edge2, int terminal, const LREdge *resolved );
 };
 
 #endif /* !elr_lr_H */

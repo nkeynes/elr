@@ -41,7 +41,8 @@ static struct option long_options[] = {
     {"output",1,0,'o'},
     {"language",1,0,3},
     {"skeleton-path",1,0,'S'},
-        {0,0,0,0} };
+    {"verbose",1,0,'v'},
+    {0,0,0,0} };
 static char short_options[] = "vo:S:";
 
 int parseCommandLine( int argc, char *argv[] )
@@ -60,7 +61,7 @@ int parseCommandLine( int argc, char *argv[] )
 	case OPT_YACC: config.outputGen = OUT_YACC; break;
 	case OPT_LALR: config.outputGen = OUT_LALR; break;
 	case 'o': config.outputSourceFile = new string(optarg); break;
-	case 'v': config.verbose = true;
+	case 'v': config.verbose = true; break;
 	case 'S': config.skeletonPath = string(optarg); break;
         }
     }
@@ -100,7 +101,7 @@ void printTimeDiff( struct timeval *a, struct timeval *b )
         s--;
         ms += 1000000;
     }
-    printf( "--- Time: %d.%06d\n",s,ms );
+    printf( "%d.%06d",s,ms );
 }
 
 int main( int argc, char *argv[] )
@@ -123,45 +124,20 @@ int main( int argc, char *argv[] )
     }
 
     gettimeofday( &tva, NULL );
-    fprintf( stderr, "Computing DFA...");
     grammar.computeDFA();
-    fprintf( stderr, "Done\nComputing FIRST(2) of grammar...\n" );
     grammar.computeFirst(lookahead);
-    fprintf( stderr, "Done\n");
     grammar.dfa->computeAccepts(grammar);
     grammar.dfa->computePredSets();
-    grammar.dfa->print(stdout);
+
     LRTable *lr = new LRTable( &grammar );
-    fprintf( stderr, "Computing LR(0)...\n");
     lr->constructPDA();
-    fprintf( stderr, "Done\nComputing LALR(1)...\n");
     lr->computeLALRSets();
-    gettimeofday( &tvb, NULL );
-    printTimeDiff( &tva, &tvb );
-    fprintf( stderr, "Done\nComputing LALR(2) lookahead sets...\n");
     lr->computeLALRkSets(lookahead);
-    fprintf( stderr, "Done\n");
-    gettimeofday( &tva, NULL );
-    printTimeDiff( &tvb, &tva );
     lr->computeFollowSets();
 
-    if( config.verbose ) {
-        fprintf( stderr, "Base DFA:\n");
-        grammar.dfa->print( stdout );
-    }
-
-    gettimeofday( &tvb, NULL );
-    printTimeDiff( &tva, &tvb );
-    fprintf( stderr, "Checking for lexical conflicts...");
     ConflictMap *conflict = new ConflictMap( lr, grammar.dfa, &grammar );
     grammar.dfa->checkConflicts( grammar, *conflict );
-    fprintf( stderr, "done\nBuilding final DFA..." );
-    gettimeofday( &tva, NULL );
-    printTimeDiff( &tvb, &tva );
     grammar.dfa->resolveConflicts( grammar, *conflict );
-    fprintf( stderr, "done\n" );
-    gettimeofday( &tvb, NULL );
-    printTimeDiff( &tva, &tvb );
 
     CodeGen *code = CodeGen::getInstance( config.languageGen );
     code->init(&grammar, lr, grammar.dfa, conflict);
@@ -172,14 +148,19 @@ int main( int argc, char *argv[] )
         grammar.dfa->print(stdout);
         lr->dumpTable();
         lr->printSummary();
+	printf( "Totals:\n" );
+	printf( "  Terminals: %d\n  Nonterminals: %d\n  Rules: %d\n",
+		grammar.terms.size(), grammar.nonterms.size(), grammar.numRules );
+	printf( "  Parser states: %d\n  Base DFA states: %d\n",
+		lr->states.size()-1, grammar.dfa->numBaseStates -1 );
+	printf( "  Unique start states: %d\n  Final DFA states: %d\n",
+		grammar.dfa->getNumStartStates(), grammar.dfa->states.size()-1 );
+	printf( "  Unresolved parser conflicts: %d\n", lr->unresolvedConflicts );
+	gettimeofday(&tvb, NULL);
+	printf( "Parser generated in: " );
+	printTimeDiff( &tva, &tvb );
+	printf( "s\n" );
     }
-    printf( "Totals:\n" );
-    printf( "  Terminals: %d\n  Nonterminals: %d\n  Rules: %d\n",
-            grammar.terms.size(), grammar.nonterms.size(), grammar.numRules );
-    printf( "  Parser states: %d\n  Base DFA states: %d\n",
-            lr->states.size()-1, grammar.dfa->numBaseStates -1 );
-    printf( "  Unique start states: %d\n  Final DFA states: %d\n",
-            grammar.dfa->getNumStartStates(), grammar.dfa->states.size()-1 );
 
     return 0;
 }

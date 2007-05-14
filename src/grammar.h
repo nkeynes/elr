@@ -178,6 +178,7 @@ class Grammar : public Node {
     void finalize( void ); /* call after grammar reading complete */
     void computeDFA( void );
     void printSymbolSet( Bitset &b );
+    void printSymbolSet( StringSet2 &s );
 //    void printTokenString( const TokenString &str );
 //    void printStringSet( const StringSet2 &set );
     void dumpGrammar( void );

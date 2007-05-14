@@ -321,9 +321,6 @@ void NFA::computeEquivClasses(void)
     }
     numEquivs = equivs->getNumClasses();
 
-    printf( "Equivalence classes: %d\n", numEquivs );
-//    equivs->printClassSet();
-    
     /* Update the moves to use the classes */
     FOR_EACH( i, vector<NFAState>, states ) {
         if( i->dest > 0 )

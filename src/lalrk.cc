@@ -26,9 +26,7 @@
 void LRTable::computeLALRkSets( int k )
 {
     for( int state = 1; state < states.size(); state++ ) {
-        fprintf( stderr, "%d", state );
         FOR_EACH( item, set<LRItem>, states[state]->items ) {
-            fprintf( stderr, "." );
             ((LRItem *)(&*item))->followsk =
                 new StringSet2(grammar->lastTerminal); /* Ugh */
             lalrk( *item, state, k, *item->followsk );

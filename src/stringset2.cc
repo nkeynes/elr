@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "stringset2.h"
+#include "grammar.h"
 
 StringSet2::StringSet2( int numSym )
 {
@@ -123,16 +124,18 @@ Bitset *StringSet2::follows( int token )
     return &second[token];
 }
 
-void StringSet2::print( void )
+void StringSet2::print( Grammar *g )
 {
     printf( "{" );
     if( hasNull ) printf( " <>," );
     for( int i=0; i<numSymbols; i++ ) {
         if(firstonly.get(i))
-            printf( " <%d>",i );
+            printf( " <%s>", g->symbol(i)->name->c_str() );
         for( int j=0; j<numSymbols; j++ ) {
             if( second[i].get(j) )
-                printf( " <%d,%d>",i,j );
+                printf( " <%s,%s>", 
+			g->symbol(i)->name->c_str(),
+			g->symbol(j)->name->c_str() );
         }
     }
     printf( " }" );

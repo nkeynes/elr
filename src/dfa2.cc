@@ -31,10 +31,6 @@ void DFA::checkConflicts( Grammar &g, ConflictMap &conflict )
     int numLMCStates = 0, numLMCEdges = 0;
     int numLMCStatesResolved = 0, numLMCEdgesResolved = 0;
     
-    printf("DFA Checking:\n");
-    printf("  Total states: %d\n", states.size() );
-    
-    printf("  Identity conflicts\n" );
     for( unsigned int i = 1; i < states.size(); i++ ) {
         if( states[i].isConflicting() ) {
             numConflicts++;
@@ -60,15 +56,12 @@ void DFA::checkConflicts( Grammar &g, ConflictMap &conflict )
             else states[i].accept = *states[i].accepts.begin();
         }
     }
-    printf("  Total Identity conflicts: %d, Resolved %d\n\n",
-           numConflicts, numResolved );
 
     /* LM Conflicts: Defined as - in an accepting state p, there exists a valid
      * transition a such that a is also a valid transition from the start
      * state.
      */
 
-    printf( "  Longest match conflicts:\n" );
     for( unsigned int i = 1, count = 0; i < states.size(); i++ ) {
         if( states[i].isAccepting() ) {
             bool hasConflicts = false, isResolved = true;
@@ -78,15 +71,9 @@ void DFA::checkConflicts( Grammar &g, ConflictMap &conflict )
                     hasConflicts = true;
                     numLMCStates++;
                 }
-//                printf("Conflict: state %d -> %d {", i, j);
-//                FOR_EACH( x, set<Symbol *>, states[i].accepts )
-//                    printf( "%s,", (*x)->name->c_str() );
-//                printf("} . "); states[states[1].moves[j]].postAccepts.print();
-//                printf(" || ");states[states[i].moves[j]].postAccepts.print();
                 int status = conflict.addLMConflict( i, j, states[i].accepts,
                                  states[states[1].moves[j]].postAccepts,
                                  states[states[i].moves[j]].postAccepts );
-//                printf(" == %d\n", status );
                 if( status == C_DONTCARE || status == C_SHIFT ) {
                     /* If we don't care, then shift? */
                 } else if( status == C_ACCEPT ) {
@@ -99,10 +86,6 @@ void DFA::checkConflicts( Grammar &g, ConflictMap &conflict )
                 numLMCStatesResolved++;
         }
     }
-    printf( "  Total LM Conflict States: %d, Resolved %d\n",
-            numLMCStates, numLMCStatesResolved );
-    printf( "  Total LM Conflict Edges: %d, Resolved %d\n",
-            numLMCEdges, numLMCEdgesResolved );
 }
 
 void DFA::resolveConflicts( Grammar &g, ConflictMap &conflict )

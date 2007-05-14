@@ -128,7 +128,6 @@ int ConflictMap::minimize()
 #endif
     for( int i=0; i<numParserStates; i++ ) parserStateMap[i] = i;
     numMinColumns = numParserStates;
-    printf("Conflict map columns: %d/%d\n",numMinColumns, numParserStates );
     return numMinColumns;
 }
     
@@ -151,18 +150,10 @@ int ConflictMap::addIdentityConflict( int state, set<Symbol *> &syms )
                     resSym = *sym;
                 }else {
                     row[i] = C_CONFLICT;
-                    if(isResolved)
-                        printf( "Lexical Identity Conflict in DFA state %d:\n",
-                                state );
-                    if( stateOk ) {
-                        printf( "  In parser state %d: %s ", i, resSym->name->c_str() );
-                    }
-                    printf( "%s ", (*sym)->name->c_str() );
                     stateOk = isResolved = false;
                 }
             }
         }
-        if( !stateOk ) printf( "\n" );
     }
     int val = collapseRow( row );
     if( val != -1 ){ /* All states were the same or didn't care */
@@ -234,31 +225,10 @@ int ConflictMap::addLMConflict( int state, int edge, set<Symbol *> &syms,
              * symbols.
              */
             row[i] = C_OHFSCK;
-#if 0            
-            if( isResolved ) {
-                printf( "Lexical LM Conflict in DFA state %d -> %d on ",
-                        state, dfa->states[state].moves[edge] );
-                //  dfa->printMove(dfa->states[state].moves[edge]);
-                printf( "\n" );
-            }
-            printf( "  In parser state %d: %s . ", i,
-                    grammar->symbol(thisSym)->name->c_str() );
-            next &= afterSyms;
-            grammar->printSymbolSet( next );
-            printf( " OR " );
-            next = alt;
-            next &= lr->states[i]->accepts;
-            grammar->printSymbolSet( next );
-            printf( "\n" );
-#endif
             isResolved = false;
         }
     }
 
-//    printf("< ");
-//    for( int i=0; i<numParserStates; i++ ) printf( "%d ",row[i] );
-//    printf(">");
-    
     int val = collapseRow( row );
     if( val != -1 ) {
         delete [] row;
@@ -292,7 +262,6 @@ int ConflictMap::collapseRow( int *row )
 
 void ConflictMap::follows( Bitset &bits, int sym, int state )
 {
-//    printf( "follows: %d, %d, %d\n", state, sym, lr->states[state]->edges[sym]->type );
     LREdge *edge = lr->states[state]->edges[sym];
 
     if( !edge && sym == grammar->spaceTerm->symbolId ) {

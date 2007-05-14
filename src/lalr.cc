@@ -217,7 +217,7 @@ void LRTable::resolveState( int st )
     LRReduceEdge *edge;
     set<LRReduceEdge *> conflicts;
 
-    if( state->isAdequate ) { /* Already OK, just fill in the edges if nec */
+    if( state->isAdequate ) { /* Already OK, just fill in the edges if necessary */
         edge = (LRReduceEdge *)state->edges[0];
         if( edge ) { /* Pure reduce state (optimize out later ) */
             for( int i=1; i <= grammar->lastTerminal; i++ ) {
@@ -297,28 +297,46 @@ void LRTable::resolveState( int st )
     }
     if( conflicts.size() == 0 ) {
         state->isAdequate = true;
-        printf("State %d resolved by LALR(1) lookahead\n", st );
         numLALR1States++;
         numConflictStates--;
-    } else { /* "last resort resolution" */
+    } else { 
+	/* Unresolved conflicts - Report and fallback on "last resort resolution" */
         FOR_EACH( edge, set<LRReduceEdge *>, conflicts ) {
             for( int i=1; i <= grammar->lastTerminal; i++ ) {
                 if( (*edge)->lookahead.get(i) ) {
-                    if( state->edges[i] == NULL ||
-                        ( state->edges[i]->type == REDUCE &&
-                          ((LRReduceEdge *)state->edges[i])->rule->ruleId >
-                          (*edge)->rule->ruleId ) ) {
-                        state->edges[i] = *edge;
-                    } else {
-                        // (*edge)->lookahead.clear(i);
+		    if( state->edges[i] == NULL ) {
+			state->edges[i] = *edge;
+		    } else {
+			LREdge *oldedge = state->edges[i];
+			/* If we have a higher-precedence reduce edge than the
+			 * existing one, replace it with the higher-prec one.
+			 */
+                        if( state->edges[i]->type == REDUCE &&
+			    ((LRReduceEdge *)state->edges[i])->rule->ruleId >
+			    (*edge)->rule->ruleId ) {
+			    state->edges[i] = *edge;
+			}
+			reportConflict( st, oldedge, *edge, i, state->edges[i] );
                     }
                 }
             }
         }
     }
-                    
-        
 } 
+
+void LRTable::reportConflict( int st, const LREdge *edge1, const LREdge *edge2, int terminal,
+			      const LREdge *resolvedEdge )
+{
+    if( edge1->type == SHIFT ) {
+	fprintf( stderr, "Warning: Shift/reduce conflict in state %d on terminal %s:\n", 
+		 st, grammar->symbol(terminal)->name->c_str() );
+    } else {
+	fprintf( stderr, "Warning: Reduce/reduce conflict in state %d on terminal %s:\n", 
+		 st, grammar->symbol(terminal)->name->c_str() );
+    }
+    unresolvedConflicts++;
+}
+    
 
 void LRTable::computeLALRSets( void )
 {

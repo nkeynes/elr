@@ -76,6 +76,7 @@ LRTable::LRTable( Grammar *gram )
 {
     grammar = gram;
     numLR0States = numLALR1States = numLR1States = numConflictStates = 0;
+    unresolvedConflicts = 0;
     states.push_back( new LRState( grammar->numSymbols+1 ) );
 }
 
@@ -283,8 +284,6 @@ void LRTable::printState( int state ) {
             printf( "  shift %s -> %d  ",
                     grammar->symbol(i)->name->c_str(),
                     ((LRShiftEdge *)states[state]->edges[i])->dest );
-            if( states[state]->edges[i]->followsk )
-                states[state]->edges[i]->followsk->print();
             printf( "\n" );
             hadShift = true;
         }

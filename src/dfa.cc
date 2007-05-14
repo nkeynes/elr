@@ -157,9 +157,6 @@ void DFA::minimize( void )
 
     /* Clear off the deceased states */
     for( int i=numStates; i > numMinStates; i-- ) states.pop_back();
-    
-    printf( "DFA Minimization complete: %d/%d states\n",
-            numMinStates, numStates );
 }
 
 /*
@@ -190,20 +187,11 @@ void DFA::traverse( vector<int> &stack, int x )
     states[x].N = depth;
     /* F(x) = F'(x) - skipped as F(x) pre-initialized */
 
-//    printf( "traverse %d N=%d (stack %d)\n", x, states[x].N, depth );
-    
     for( int i=0; i<numEquivs; i++ ) if( states[x].moves[i] != 0 ) {
         int y = states[x].moves[i];
         if( states[y].N == 0 ) traverse( stack, y );
         states[x].N = states[y].N < states[x].N ? states[y].N : states[x].N;
         states[x].postAccepts |= states[y].postAccepts;
-#if 0
-        printf( "states[x=%d].postAccepts ( ",x );
-        states[x].postAccepts.print();
-        printf( ") |= states[y=%d].postAccepts (",y );
-        states[y].postAccepts.print();
-        printf( ")\n" );
-#endif
     }
     if( states[x].N == depth ) {
         int top;
