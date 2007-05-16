@@ -232,7 +232,7 @@ int __inline__ YYL_GOTO( int state, int token ){
 
 YYRETVAL $PARSER_NAME( struct yy_parseable yyf )
 {
-    int yytoken;
+    int yytoken, i;
     int yypstate = $PARSER_START_STATE;
     int yypnextstate, yypnextidx, yyprecovering = 0;
     int yyperrorcount = 0;
@@ -283,12 +283,6 @@ YYRETVAL $PARSER_NAME( struct yy_parseable yyf )
 		yyf.yylchar = yylEquivClasses[$LEXER_EOF_CHAR]; 
 		yyf.yylpos++;					
 	    } else {						
-		if( yyf.buffer[yyf.yylpos] == YYL_END_OF_LINE ) {	
-		    yyf.yylline++;				
-		    yyf.yylcol = 1;				
-		} else {					
-		    yyf.yylcol++;				
-		}						  
 		yyf.yylchar = (yylEquivClasses[yyf.buffer[yyf.yylpos++]]);
 	    }
 
@@ -301,15 +295,15 @@ YYRETVAL $PARSER_NAME( struct yy_parseable yyf )
                     yyf.yylfirst = yyf.yylpos-1;
 		    yyllastaccept = -1;
                     yylstate = yylStart[yypstate];
-		    yylline = yylcol = 1;
+		    yyf.yylline = yyf.yylcol = 1;
                 } else if( yyllastaccept == -1 ) {
 		    /* We haven't encountered a valid string - ERROR
 		     * Try to recover by dropping the first character and
 		     * starting again
 		     */
-		    YY_ERROR( "Unscannable string\n" );
+		    YY_ERROR( "Unable to recognize input string: '%.*s'\n", yyf.yylpos-yyf.yylfirst, yyf.buffer+yyf.yylfirst );
 		    yyf.yylline = yylline;
-		    yyf.yylcol = yylcol;
+		    yyf.yylcol = yylcol+1;
 		    yyf.yylpos = yylpos = ++yyf.yylfirst;
 		    yylstate = yylStart[yypstate];
 		} else {
@@ -334,6 +328,14 @@ $LEXER_ACTION_CODE;
         yytoken = yyllastaccept;
 
 	if( yyf.buffer ) {
+	    for( i=yyf.yylfirst; i<yyf.yylpos; i++ ) {
+		if( yyf.buffer[i] == YYL_END_OF_LINE ) {	
+		    yyf.yylline++;				
+		    yyf.yylcol = 1;				
+		} else {					
+		    yyf.yylcol++;				
+		}			
+	    }			  
 	    YY_DEBUG( "Scanned: %s ('%.*s')\n", yySymbolName[yytoken], yyf.yylpos-yyf.yylfirst, yyf.buffer+yyf.yylfirst );
 	} else {
 	    YY_DEBUG( "Scanned: %s\n", yySymbolName[yytoken] );
@@ -353,14 +355,15 @@ $LEXER_ACTION_CODE;
                         goto fini;
                     break; /* drop token on the floor */
                 }
-		YY_ERROR( "Unexpected token: %s\n", yySymbolName[yytoken] );
+		YY_ERROR( "Unexpected token: %s ('%.*s') at %d.%d\n", yySymbolName[yytoken],
+			  yyf.yylpos-yyf.yylfirst, yyf.buffer+yyf.yylfirst,			  
+			  yylline, yylcol );
                 yyperrorcount++;
                 do {
                     yypnextstate = YYP_GOTO( yypstate, $PARSER_ERROR_TOKEN );
                     if( yypnextstate != $PARSER_NO_STATE ) break;
                     if( yypstacktop == 0 ) goto fini;
                     yypstate = yypstack[--yypstacktop].state;
-		    YY_ERROR( "Pop\n" );
                 } while( 1 );
                 //yypstatestack++; /* no meaningful yylsynattr */
                 //yypstate = yypnextstate;
