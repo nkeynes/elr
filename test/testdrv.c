@@ -1,3 +1,4 @@
+#include <stdio.h>
 int yyparse_file( char *filename );
 
 int main(int argc, char *argv[] )
