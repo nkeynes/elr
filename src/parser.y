@@ -41,19 +41,22 @@ int yyerror( char *s );
     RuleSymbols *ruleSyms;
     RulePs *rules;
     Rule *rule;
+    bool boolean;
 }
 
 %token IDENT REGEXP STRING ACTION TYPE CODE ERROR_IDENT
 %token LEFTPREC RIGHTPREC NONASSOCPREC START CLASS INCLUDE
 %token ERROR COLON OR PERIOD LPAREN RPAREN SEMICOLON EQUALS
+%token CASE EXPECT DISAMBIGUATION NUMBER ON OFF
 
-%type <scan> IDENT REGEXP STRING ACTION TYPE CODE ERROR_IDENT Type String
+%type <scan> IDENT REGEXP STRING ACTION TYPE CODE ERROR_IDENT Type String NUMBER
 %type <rules> Rhs
 %type <nt> Lhs
 %type <rule> Symbols Rule
 %type <sym> Symbol
 %type <term> Lexical
 %type <action> Action
+%type <boolean> Bool
 
 %%
 
@@ -67,6 +70,9 @@ Directive : Lprec Precs SEMICOLON
                                    grammar.lookupIdent( $2.str, $2.posn ); }
           | CLASS String     { grammar.setClass( $2.str ); }
           | CODE             { grammar.addCode( $1.str, $1.posn ); }
+          | EXPECT NUMBER    { grammar.expectedParserConflicts = $2.number; }
+          | CASE Bool        { grammar.caseSensitive = $2; }
+          | DISAMBIGUATION Bool { grammar.autoLexDisambiguation = $2; }
 Lprec : LEFTPREC             { assoc = assoc_left; prec++; }
 Rprec : RIGHTPREC            { assoc = assoc_right; prec++; }
 Nprec : NONASSOCPREC         { assoc = assoc_none; prec++; }
@@ -106,12 +112,14 @@ Precs : Precs Symbol     { if( $2.sym->prec != 0 )
                            }
                          }
         | ;
+Bool: ON              { $$ = true; }
+    | OFF             { $$ = false; }
 String : IDENT
        | REGEXP
        | STRING
        ;
-Lexical: REGEXP       { $$ = Terminal::fromRegexp($1.str, $1.posn); }
-       | STRING       { $$ = Terminal::fromString($1.str, $1.posn); }
+Lexical: REGEXP       { $$ = Terminal::fromRegexp($1.str, $1.posn, grammar.caseSensitive); }
+       | STRING       { $$ = Terminal::fromString($1.str, $1.posn, grammar.caseSensitive); }
        ;
 Action : Action ACTION       { $$ = $1;
                                $$->push_back( ActionItem( $2.str, $2.posn )); }

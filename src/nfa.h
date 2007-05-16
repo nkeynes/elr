@@ -39,7 +39,11 @@ class NFAState {
 
     void addEmptyMove( int dest );
     void addCharMove( int ch, int dest );
-    void addClassMove( char **s, int dest );
+    void addCharMove( int ch, int dest, bool caseSensitive );
+    void addClassMove( char **s, int dest, bool caseSensitive );
+
+ protected:
+    void set( int ch, bool caseSensitive );
 };
 
 class NFA { 
@@ -47,11 +51,12 @@ class NFA {
     vector <NFAState> states;
     EquivClassSet *equivs;
     int numEquivs;
+    bool caseSensitive;
     
-    NFA( int charsetsize = CHARSET_SIZE );
+    NFA( int charsetsize = CHARSET_SIZE, bool caseSensitive = true );
     
-    static NFA *fromString( string &s, Symbol *sym );
-    static NFA *fromRegexp( string &s, Symbol *sym );
+    static NFA *fromString( string &s, Symbol *sym, bool caseSensitive );
+    static NFA *fromRegexp( string &s, Symbol *sym, bool caseSensitive );
     static NFA *fromEmpty( void );
     static NFA *fromEOF( Symbol *sym );
     void addAlternation( NFA *fsa );

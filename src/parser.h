@@ -59,7 +59,13 @@
      LPAREN = 275,
      RPAREN = 276,
      SEMICOLON = 277,
-     EQUALS = 278
+     EQUALS = 278,
+     CASE = 279,
+     EXPECT = 280,
+     DISAMBIGUATION = 281,
+     NUMBER = 282,
+     ON = 283,
+     OFF = 284
    };
 #endif
 /* Tokens.  */
@@ -84,6 +90,12 @@
 #define RPAREN 276
 #define SEMICOLON 277
 #define EQUALS 278
+#define CASE 279
+#define EXPECT 280
+#define DISAMBIGUATION 281
+#define NUMBER 282
+#define ON 283
+#define OFF 284
 
 
 
@@ -103,9 +115,10 @@ typedef union YYSTYPE
     RuleSymbols *ruleSyms;
     RulePs *rules;
     Rule *rule;
+    bool boolean;
 }
 /* Line 1489 of yacc.c.  */
-#line 109 "parser.hh"
+#line 122 "parser.hh"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

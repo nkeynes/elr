@@ -109,13 +109,18 @@ void CodeGen::handleCommand( char *cmd, int len, FILE *out )
         writeIntegerConst( grammar->spaceTerm?grammar->spaceTerm->symbolId:-2, out );
     } else if( MATCH(cmd,len,"LEXER_START_STATE_ARRAY") ) {
         int arr[lr->states.size()];
-        for( int i=0; i<lr->states.size(); i++ )
-            arr[i] = dfa->startStates[conflict->parserStateMap[i]];
+        for( int i=0; i<lr->states.size(); i++ ) {
+	    if( conflict == NULL ) {
+		arr[i] = 1;
+	    } else {
+		arr[i] = dfa->startStates[conflict->parserStateMap[i]];
+	    }
+	}
         writeIntegerArray( arr, lr->states.size(), out );
     } else if( MATCH(cmd,len,"LEXER_ACCEPT_ARRAY") ) {
         int arr[dfa->states.size()];
         for( int i=0; i<dfa->states.size(); i++ )
-            arr[i] = ( dfa->states[i].accept ?
+            arr[i] = ( dfa->states[i].accept != NULL ?
                        dfa->states[i].accept->symbolId : -1 );
         writeIntegerArray( arr, dfa->states.size(), out );
     } else if( MATCH(cmd,len,"LEXER_NUM_EQUIV") ) {

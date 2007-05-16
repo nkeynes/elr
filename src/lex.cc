@@ -34,6 +34,7 @@ unsigned int yylength;
 Position yychposn;
 char *yydata, *yych, *yyend;
 bool yyStart = true;
+static bool inDirective;
 
 /* Recognizes:
    %left = LEFTPREC
@@ -42,6 +43,9 @@ bool yyStart = true;
    %start = START
    %class = CLASS
    %include = INCLUDE
+   %casesensitive = CASESENSITIVE
+   %expect = EXPECT
+   %disambiguation
    %{ .*? %} = CODE
    error = ERROR
    : = COLON
@@ -139,8 +143,28 @@ token_t yylex( void )
                 !strncmp( yyhead, "error", 5 ) )
                 return ERROR_IDENT;
             yylval.scan.str = yystrdup( yyhead, yych - yyhead );
+	    if( inDirective ) {
+		inDirective = false;
+		if( (yych-yyhead == 2 && !strncasecmp(yyhead, "on",2)) ||
+		    (yych-yyhead == 3 && !strncasecmp(yyhead, "yes",3)) ||
+		    (yych-yyhead == 4 && !strncasecmp(yyhead, "true",4)) ) {
+		    return ON;
+		} else if( (yych-yyhead == 2 && !strncasecmp(yyhead, "no",2)) ||
+			   (yych-yyhead == 3 && !strncasecmp(yyhead, "off",3)) ||
+			   (yych-yyhead == 5 && !strncasecmp(yyhead, "false",5)) ) {
+		    return OFF;
+		}
+	    }
             return IDENT;
         }
+	
+	if( isdigit( *yych ) ) {
+	    yyhead = yych;
+	    while( !ISEOF() && isdigit(*yych) )
+		NEXT();
+	    yylval.scan.number = strtol( yyhead, NULL, 10 );
+	    return NUMBER;
+	}
         switch( *yych ) {
             case ':': NEXT(); return COLON;
             case ';': NEXT(); yyStart = true; return SEMICOLON;
@@ -186,6 +210,15 @@ token_t yylex( void )
                 else if( !strncasecmp(yyhead, "start", c ) ) return START;
                 else if( !strncasecmp(yyhead, "class", c ) ) return CLASS;
                 else if( !strncasecmp(yyhead, "include", c ) ) return INCLUDE;
+		else if( !strncasecmp(yyhead, "expect", c ) ) return EXPECT;
+		else if( !strncasecmp(yyhead, "casesensitive", c ) ) {
+		    inDirective = true;
+		    return CASE;
+		}
+		else if( !strncasecmp(yyhead, "disambiguation", c ) ) {
+		    inDirective = true; 
+		    return DISAMBIGUATION;
+		}
                 break;
             case '\"': /* Regexp */
                 yyhead = yych;

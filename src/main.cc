@@ -135,17 +135,22 @@ int main( int argc, char *argv[] )
     lr->computeLALRkSets(lookahead);
     lr->computeFollowSets();
 
-    ConflictMap *conflict = new ConflictMap( lr, grammar.dfa, &grammar );
-    grammar.dfa->checkConflicts( grammar, *conflict );
-    grammar.dfa->resolveConflicts( grammar, *conflict );
-
-    CodeGen *code = CodeGen::getInstance( config.languageGen );
-    code->init(&grammar, lr, grammar.dfa, conflict);
-    code->createSourceFile();
+    ConflictMap *conflict = NULL;
+    if( grammar.autoLexDisambiguation ) {
+	conflict = new ConflictMap( lr, grammar.dfa, &grammar );
+	grammar.dfa->checkConflicts( grammar, *conflict );
+	grammar.dfa->resolveConflicts( grammar, *conflict );
+    } else {
+	grammar.dfa->resolveConflictsNoContext( grammar );
+    }
+    grammar.dfa->minimize();
 
     if( config.verbose ) {
+	printf( "Grammar:\n" );
         grammar.dumpGrammar();
+	printf( "\nLexical Automata:\n" );
         grammar.dfa->print(stdout);
+	printf( "\nParser Automata:\n" );
         lr->dumpTable();
         lr->printSummary();
 	printf( "Totals:\n" );
@@ -156,6 +161,19 @@ int main( int argc, char *argv[] )
 	printf( "  Unique start states: %d\n  Final DFA states: %d\n",
 		grammar.dfa->getNumStartStates(), grammar.dfa->states.size()-1 );
 	printf( "  Unresolved parser conflicts: %d\n", lr->unresolvedConflicts );
+    }
+
+    if( lr->unresolvedConflicts != grammar.expectedParserConflicts ) {
+	fprintf( stderr, "Error: Expected %d conflicts, but found %d.\n",
+		 grammar.expectedParserConflicts, lr->unresolvedConflicts );
+	return 1;
+    }
+
+    CodeGen *code = CodeGen::getInstance( config.languageGen );
+    code->init(&grammar, lr, grammar.dfa, conflict);
+    code->createSourceFile();
+
+    if( config.verbose ) {
 	gettimeofday(&tvb, NULL);
 	printf( "Parser generated in: " );
 	printTimeDiff( &tva, &tvb );

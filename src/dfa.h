@@ -74,6 +74,7 @@ class DFA : public CombSource {
     void checkDuplicateSymbols( Grammar &g );
     void checkConflicts( Grammar &g, ConflictMap &conflict );
     void resolveConflicts( Grammar &g, ConflictMap &conflict );
+    void resolveConflictsNoContext( Grammar &g );
     void computeAccepts( Grammar &g );
     void computePredSets( );
     int getNumStartStates( );

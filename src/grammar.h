@@ -116,8 +116,8 @@ class Terminal : public Symbol {
     Action *action; /* Lexical action */
 
     Terminal( string *name, Position &posn );
-    static Terminal *fromString( string *name, Position &posn );
-    static Terminal *fromRegexp( string *name, Position &posn );
+    static Terminal *fromString( string *name, Position &posn, bool caseSensitive );
+    static Terminal *fromRegexp( string *name, Position &posn, bool caseSensitive );
 };
 
 typedef vector<Terminal> Terminals;
@@ -146,6 +146,9 @@ class Grammar : public Node {
   public:
     string *ooClass;
     string *parserName;
+    bool caseSensitive;
+    bool autoLexDisambiguation;
+    int expectedParserConflicts;
     Nonterminal *startSymbol;
     Terminal *eofSymbol, *errorTerm, *spaceTerm;
     DFA *dfa;

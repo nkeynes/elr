@@ -104,7 +104,7 @@ Terminal *Grammar::lookupStringTerm( string *name, Position &posn )
 {
     Terminal *sym = stringTermHash[*name];
     if( sym == NULL ) {
-        sym = Terminal::fromString( name, posn );
+        sym = Terminal::fromString( name, posn, caseSensitive );
         stringTermHash[*name] = sym;
         add( sym );
     } else delete name;
@@ -114,7 +114,7 @@ Terminal *Grammar::lookupRegexpTerm( string *name, Position &posn )
 {
     Terminal *sym = regexpTermHash[*name];
     if( sym == NULL ) {
-        sym = Terminal::fromRegexp( name, posn );
+        sym = Terminal::fromRegexp( name, posn, caseSensitive );
         regexpTermHash[*name] = sym;
         add( sym );
     } else delete name;
@@ -178,6 +178,9 @@ Grammar::Grammar( )
     add(errorTerm);
     dfa = NULL;
     numRules = numSymbols = lastTerminal = 0;
+    caseSensitive = true;
+    autoLexDisambiguation = true;
+    expectedParserConflicts = 0;
 }
 
 Grammar::~Grammar( )
@@ -213,17 +216,17 @@ Terminal::Terminal( string *str, Position &pos ) : Symbol(str, pos)
     isPlaceholder = false;
 }
 
-Terminal *Terminal::fromString( string *str, Position &pos ) {
+Terminal *Terminal::fromString( string *str, Position &pos, bool caseSensitive ) {
     Terminal *term = new Terminal( str, pos );
     string s = str->substr(1,str->length()-2);    
-    term->nfa = NFA::fromString( s, term );
+    term->nfa = NFA::fromString( s, term, caseSensitive );
     return term;
 }
 
-Terminal *Terminal::fromRegexp( string *str, Position &pos ) {
+Terminal *Terminal::fromRegexp( string *str, Position &pos, bool caseSensitive ) {
     Terminal *term = new Terminal( str, pos );
     string s = str->substr(1,str->length()-2);
-    term->nfa = NFA::fromRegexp( s, term );
+    term->nfa = NFA::fromRegexp( s, term, caseSensitive );
     return term;
 }
 

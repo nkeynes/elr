@@ -88,6 +88,19 @@ void DFA::checkConflicts( Grammar &g, ConflictMap &conflict )
     }
 }
 
+void DFA::resolveConflictsNoContext( Grammar &g )
+{
+    for( unsigned int i = 1; i < states.size(); i++ ) {
+	if( !states[i].accepts.empty() ) {
+	    int min = g.numSymbols+1;
+	    FOR_EACH( sym, set<Symbol *>, states[i].accepts ) {
+		if( (*sym)->symbolId < min ) min = (*sym)->symbolId;
+	    }
+	    states[i].accept = g.symbol(min);
+	}
+    }
+}
+
 void DFA::resolveConflicts( Grammar &g, ConflictMap &conflict )
 {
     numStartStates = conflict.minimize();
@@ -95,7 +108,6 @@ void DFA::resolveConflicts( Grammar &g, ConflictMap &conflict )
     for( int i=0; i<numStartStates; i++ ) {
         startStates[i] = copyStartStateMin( g, conflict, i );
     }
-    minimize();    
 }
 
 /*

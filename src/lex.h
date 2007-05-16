@@ -34,6 +34,7 @@ typedef enum { IDENT, REGEXP, STRING, ACTION, TYPE, CODE,
 class Lexical {
   public:
     Position posn;
+    int number;
     string *str;
 };
 

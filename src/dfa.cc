@@ -152,8 +152,10 @@ void DFA::minimize( void )
     }
 
     /* Fixup the start state array */
-    for( int i=0; i < numStartStates; i++ )
-        startStates[i] = ecs.getClass(startStates[i]);
+    if( startStates != NULL ) {
+	for( int i=0; i < numStartStates; i++ )
+	    startStates[i] = ecs.getClass(startStates[i]);
+    }
 
     /* Clear off the deceased states */
     for( int i=numStates; i > numMinStates; i-- ) states.pop_back();

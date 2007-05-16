@@ -18,6 +18,7 @@
 #include <assert.h>
 #include <vector>
 #include <string>
+#include <ctype.h>
 #pragma implementation "nfa.h"
 #include "config.h"
 #include "nfa.h"
@@ -26,23 +27,24 @@
 
 /******************************* Constructors ********************************/
 
-NFA::NFA( int css )
+NFA::NFA( int css, bool cs )
 {
     numEquivs = css;
     states.push_back( NFAState(numEquivs) ); /* Null state */
     equivs = NULL;
+    caseSensitive = cs;
 }
 
-NFA *NFA::fromString( string &s, Symbol *sym )
+NFA *NFA::fromString( string &s, Symbol *sym, bool cs )
 {
-    NFA *fsa = new NFA();
+    NFA *fsa = new NFA(CHARSET_SIZE,cs);
     fsa->genStringNFA( s, sym );
     return fsa;
 }
 
-NFA *NFA::fromRegexp( string &s, Symbol *sym )
+NFA *NFA::fromRegexp( string &s, Symbol *sym, bool cs )
 {
-    NFA *fsa = new NFA();
+    NFA *fsa = new NFA(CHARSET_SIZE,cs);
     fsa->genRegexpNFA( s, sym );
     return fsa;
 }
@@ -107,10 +109,10 @@ void NFA::genStringNFA( string &str, Symbol *sym )
         cur = addState();
         if( *s == '\\' ) {
             s++;
-            states[last].addCharMove( unbackslashify( &s ), cur );
+            states[last].addCharMove( unbackslashify( &s ), cur, caseSensitive );
             if( *s ) s++;
         }
-        else states[last].addCharMove( *s++, cur );
+        else states[last].addCharMove( *s++, cur, caseSensitive );
         last = cur;
     }
     states[cur].accept = sym;
@@ -158,7 +160,7 @@ int NFA::parseRegexpChoice( char **s, int start )
         switch( c ) {
             case '[':
                 next = addState();
-                states[cur].addClassMove( s, next );
+                states[cur].addClassMove( s, next, caseSensitive );
                 last = cur;
                 cur = next;
                 break;
@@ -187,7 +189,7 @@ int NFA::parseRegexpChoice( char **s, int start )
                 c = unbackslashify(s);
             default:
                 next = addState();
-                states[cur].addCharMove( c, next );
+                states[cur].addCharMove( c, next, caseSensitive );
                 last = cur;
                 cur = next;
         }
@@ -237,7 +239,27 @@ void NFAState::addCharMove( int ch, int to )
     dest = to;
 }
 
-void NFAState::addClassMove( char **s, int to )
+void NFAState::set( int ch, bool caseSensitive ) 
+{
+    if( caseSensitive || !isalpha(ch) ) {
+	on.set(ch);
+    } else {
+	on.set( toupper(ch) );
+	on.set( tolower(ch) );
+    }
+}
+
+/**
+ * Add a case-insensitive character move
+ */
+void NFAState::addCharMove( int ch, int to, bool caseSensitive )
+{
+    assert( dest == 0 );
+    set( ch, caseSensitive );
+    dest = to;
+}
+
+void NFAState::addClassMove( char **s, int to, bool caseSensitive )
 {
     int c, c2, n;
     bool invert = false;
@@ -264,9 +286,9 @@ void NFAState::addClassMove( char **s, int to )
                         c2 = unbackslashify( s );
                     } else c2 = **s;
                     for( ; c < c2; c++ )
-                        on.set(c);
+			set( c, caseSensitive );
                 }
-                on.set(c);
+		set( c, caseSensitive );
         }
         (*s)++;
     }
