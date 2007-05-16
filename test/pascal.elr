@@ -15,20 +15,23 @@
  * beginnings of a separate compilation facility
  */
 
-%}
+}
+
+%casesensitive off
+%disambiguation off
 
 file : program
 	| module
 	;
 
-program : program_heading semicolon block DOT
+program : program_heading ';' block '.'
 	;
 
-program_heading : PROGRAM identifier
-	| PROGRAM identifier LPAREN identifier_list RPAREN
+program_heading : 'PROGRAM' identifier
+	| 'PROGRAM' identifier '(' identifier_list ')'
 	;
 
-identifier_list : identifier_list comma identifier
+identifier_list : identifier_list ',' identifier
 	| identifier
 	;
 
@@ -46,18 +49,18 @@ module : constant_definition_part
 	procedure_and_function_declaration_part
 	;
 
-label_declaration_part : LABEL label_list semicolon
+label_declaration_part : 'LABEL' label_list ';'
 	|
 	;
 
-label_list : label_list comma label
+label_list : label_list ',' label
 	| label
 	;
 
 label : DIGSEQ
 	;
 
-constant_definition_part : CONST constant_list
+constant_definition_part : 'CONST' constant_list
 	|
 	;
 
@@ -65,7 +68,7 @@ constant_list : constant_list constant_definition
 	| constant_definition
 	;
 
-constant_definition : identifier EQUAL cexpression semicolon
+constant_definition : identifier '=' cexpression ';'
 	;
 
 cexpression : csimple_expression
@@ -85,13 +88,13 @@ cfactor : sign cfactor
 	;
 
 cexponentiation : cprimary
-	| cprimary STARSTAR cexponentiation
+	| cprimary '**' cexponentiation
 	;
 
 cprimary : identifier
-	| LPAREN cexpression RPAREN
+	| '(' cexpression ')'
 	| unsigned_constant
-	| NOT cprimary
+	| 'NOT' cprimary
 	;
 
 constant : non_string
@@ -99,8 +102,8 @@ constant : non_string
 	| CHARACTER_STRING
 	;
 
-sign : PLUS
-	| MINUS
+sign : '+'
+	| '-'
 	;
 
 non_string : DIGSEQ
@@ -108,7 +111,7 @@ non_string : DIGSEQ
 	| REALNUMBER
 	;
 
-type_definition_part : TYPE type_definition_list
+type_definition_part : 'TYPE' type_definition_list
 	|
 	;
 
@@ -116,7 +119,7 @@ type_definition_list : type_definition_list type_definition
 	| type_definition
 	;
 
-type_definition : identifier EQUAL type_denoter semicolon
+type_definition : identifier '=' type_denoter ';'
 	;
 
 type_denoter : identifier
@@ -132,14 +135,14 @@ new_ordinal_type : enumerated_type
 	| subrange_type
 	;
 
-enumerated_type : LPAREN identifier_list RPAREN
+enumerated_type : '(' identifier_list ')'
 	;
 
-subrange_type : constant DOTDOT constant
+subrange_type : constant '..' constant
 	;
 
 new_structured_type : structured_type
-	| PACKED structured_type
+	| 'PACKED' structured_type
 	;
 
 structured_type : array_type
@@ -148,10 +151,10 @@ structured_type : array_type
 	| file_type
 	;
 
-array_type : ARRAY LBRAC index_list RBRAC OF component_type
+array_type : 'ARRAY' '[' index_list ']' 'OF' component_type
 	;
 
-index_list : index_list comma index_type
+index_list : index_list ',' index_type
 	| index_type
 	;
 
@@ -163,55 +166,55 @@ ordinal_type : new_ordinal_type
 
 component_type : type_denoter ;
 
-record_type : RECORD record_section_list END
-	| RECORD record_section_list semicolon variant_part END
-	| RECORD variant_part END
+record_type : 'RECORD' record_section_list 'END'
+	| 'RECORD' record_section_list ';' variant_part 'END'
+	| 'RECORD' variant_part 'END'
 	;
 
-record_section_list : record_section_list semicolon record_section
+record_section_list : record_section_list ';' record_section
 	| record_section
 	;
 
-record_section : identifier_list COLON type_denoter
+record_section : identifier_list ':' type_denoter
 	;
 
-variant_part : CASE variant_selector OF variant_list semicolon
-	| CASE variant_selector OF variant_list
+variant_part : 'CASE' variant_selector 'OF' variant_list ';'
+	| 'CASE' variant_selector 'OF' variant_list
 	|
 	;
 
-variant_selector : tag_field COLON tag_type
+variant_selector : tag_field ':' tag_type
 	| tag_type
 	;
 
-variant_list : variant_list semicolon variant
+variant_list : variant_list ';' variant
 	| variant
 	;
 
-variant : case_constant_list COLON LPAREN record_section_list RPAREN
-	| case_constant_list COLON LPAREN record_section_list semicolon
-		variant_part RPAREN
-	| case_constant_list COLON LPAREN variant_part RPAREN
+variant : case_constant_list ':' '(' record_section_list ')'
+	| case_constant_list ':' '(' record_section_list ';'
+		variant_part ')'
+	| case_constant_list ':' '(' variant_part ')'
 	;
 
-case_constant_list : case_constant_list comma case_constant
+case_constant_list : case_constant_list ',' case_constant
 	| case_constant
 	;
 
 case_constant : constant
-	| constant DOTDOT constant
+	| constant '..' constant
 	;
 
 tag_field : identifier ;
 
 tag_type : identifier ;
 
-set_type : SET OF base_type
+set_type : 'SET' 'OF' base_type
 	;
 
 base_type : ordinal_type ;
 
-file_type : PFILE OF component_type
+file_type : 'FILE' 'OF' component_type
 	;
 
 new_pointer_type : UPARROW domain_type
@@ -219,25 +222,25 @@ new_pointer_type : UPARROW domain_type
 
 domain_type : identifier ;
 
-variable_declaration_part : VAR variable_declaration_list semicolon
+variable_declaration_part : 'VAR' variable_declaration_list ';'
 	|
 	;
 
 variable_declaration_list :
-	  variable_declaration_list semicolon variable_declaration
+	  variable_declaration_list ';' variable_declaration
 	| variable_declaration
 	;
 
-variable_declaration : identifier_list COLON type_denoter
+variable_declaration : identifier_list ':' type_denoter
 	;
 
 procedure_and_function_declaration_part :
-		proc_or_func_declaration_list semicolon
+		proc_or_func_declaration_list ';'
 	|
 	;
 
 proc_or_func_declaration_list :
-	  proc_or_func_declaration_list semicolon proc_or_func_declaration
+	  proc_or_func_declaration_list ';' proc_or_func_declaration
 	| proc_or_func_declaration
 	;
 
@@ -245,21 +248,22 @@ proc_or_func_declaration : procedure_declaration
 	| function_declaration
 	;
 
-procedure_declaration : procedure_heading semicolon directive
-	| procedure_heading semicolon procedure_block
+procedure_declaration : procedure_heading ';' directive
+	| procedure_heading ';' procedure_block
 	;
 
 procedure_heading : procedure_identification
 	| procedure_identification formal_parameter_list
 	;
 
-directive : FORWARD
-	| EXTERNAL
+directive : 'FORWARD'
+	| 'EXTERNAL'
+	| 'EXTERN'
 	;
 
-formal_parameter_list : LPAREN formal_parameter_section_list RPAREN ;
+formal_parameter_list : '(' formal_parameter_section_list ')' ;
 
-formal_parameter_section_list : formal_parameter_section_list semicolon formal_parameter_section
+formal_parameter_section_list : formal_parameter_section_list ';' formal_parameter_section
 	| formal_parameter_section
 	;
 
@@ -269,40 +273,40 @@ formal_parameter_section : value_parameter_specification
 	| functional_parameter_specification
 	;
 
-value_parameter_specification : identifier_list COLON identifier
+value_parameter_specification : identifier_list ':' identifier
 	;
 
-variable_parameter_specification : VAR identifier_list COLON identifier
+variable_parameter_specification : 'VAR' identifier_list ':' identifier
 	;
 
 procedural_parameter_specification : procedure_heading ;
 
 functional_parameter_specification : function_heading ;
 
-procedure_identification : PROCEDURE identifier ;
+procedure_identification : 'PROCEDURE' identifier ;
 
 procedure_block : block ;
 
-function_declaration : function_heading semicolon directive
-	| function_identification semicolon function_block
-	| function_heading semicolon function_block
+function_declaration : function_heading ';' directive
+	| function_identification ';' function_block
+	| function_heading ';' function_block
 	;
 
-function_heading : FUNCTION identifier COLON result_type
-	| FUNCTION identifier formal_parameter_list COLON result_type
+function_heading : 'FUNCTION' identifier ':' result_type
+	| 'FUNCTION' identifier formal_parameter_list ':' result_type
 	;
 
 result_type : identifier ;
 
-function_identification : FUNCTION identifier ;
+function_identification : 'FUNCTION' identifier ;
 
 function_block : block ;
 
 statement_part : compound_statement ;
 
-compound_statement : PBEGIN statement_sequence END ;
+compound_statement : 'BEGIN' statement_sequence 'END' ;
 
-statement_sequence : statement_sequence semicolon statement
+statement_sequence : statement_sequence ';' statement
 	| statement
 	;
 
@@ -310,11 +314,11 @@ statement : open_statement
 	| closed_statement
 	;
 
-open_statement : label COLON non_labeled_open_statement
+open_statement : label ':' non_labeled_open_statement
 	| non_labeled_open_statement
 	;
 
-closed_statement : label COLON non_labeled_closed_statement
+closed_statement : label ':' non_labeled_closed_statement
 	| non_labeled_closed_statement
 	;
 
@@ -337,38 +341,38 @@ non_labeled_open_statement : open_with_statement
 	| open_for_statement
 	;
 
-repeat_statement : REPEAT statement_sequence UNTIL boolean_expression
+repeat_statement : 'REPEAT' statement_sequence 'UNTIL' boolean_expression
 	;
 
-open_while_statement : WHILE boolean_expression DO open_statement
+open_while_statement : 'WHILE' boolean_expression 'DO' open_statement
 	;
 
-closed_while_statement : WHILE boolean_expression DO closed_statement
+closed_while_statement : 'WHILE' boolean_expression 'DO' closed_statement
 	;
 
-open_for_statement : FOR control_variable ASSIGNMENT initial_value direction
-			final_value DO open_statement
+open_for_statement : 'FOR' control_variable ':=' initial_value direction
+			final_value 'DO' open_statement
 	;
 
-closed_for_statement : FOR control_variable ASSIGNMENT initial_value direction
-			final_value DO closed_statement
+closed_for_statement : 'FOR' control_variable ':=' initial_value direction
+			final_value 'DO' closed_statement
 	;
 
-open_with_statement : WITH record_variable_list DO open_statement
+open_with_statement : 'WITH' record_variable_list 'DO' open_statement
 	;
 
-closed_with_statement : WITH record_variable_list DO closed_statement
+closed_with_statement : 'WITH' record_variable_list 'DO' closed_statement
 	;
 
-open_if_statement : IF boolean_expression THEN statement
-	| IF boolean_expression THEN closed_statement ELSE open_statement
+open_if_statement : 'IF' boolean_expression 'THEN' statement
+	| 'IF' boolean_expression 'THEN' closed_statement 'ELSE' open_statement
 	;
 
-closed_if_statement : IF boolean_expression THEN closed_statement
-			ELSE closed_statement
+closed_if_statement : 'IF' boolean_expression 'THEN' closed_statement
+			'ELSE' closed_statement
 	;
 
-assignment_statement : variable_access ASSIGNMENT expression
+assignment_statement : variable_access ':=' expression
 	;
 
 variable_access : identifier
@@ -377,68 +381,68 @@ variable_access : identifier
 	| variable_access UPARROW
 	;
 
-indexed_variable : variable_access LBRAC index_expression_list RBRAC
+indexed_variable : variable_access '[' index_expression_list ']'
 	;
 
-index_expression_list : index_expression_list comma index_expression
+index_expression_list : index_expression_list ',' index_expression
 	| index_expression
 	;
 
 index_expression : expression ;
 
-field_designator : variable_access DOT identifier
+field_designator : variable_access '.' identifier
 	;
 
 procedure_statement : identifier params
 	| identifier
 	;
 
-params : LPAREN actual_parameter_list RPAREN ;
+params : '(' actual_parameter_list ')' ;
 
-actual_parameter_list : actual_parameter_list comma actual_parameter
+actual_parameter_list : actual_parameter_list ',' actual_parameter
 	| actual_parameter
 	;
 
 actual_parameter : expression
-	| expression COLON expression
-	| expression COLON expression COLON expression
+	| expression ':' expression
+	| expression ':' expression ':' expression
 	;
 
-goto_statement : GOTO label
+goto_statement : 'GOTO' label
 	;
 
-case_statement : CASE case_index OF case_list_element_list END
-	| CASE case_index OF case_list_element_list SEMICOLON END
-	| CASE case_index OF case_list_element_list semicolon
-			otherwisepart statement END
-	| CASE case_index OF case_list_element_list semicolon
-			otherwisepart statement SEMICOLON END
+case_statement : 'CASE' case_index 'OF' case_list_element_list 'END'
+	| 'CASE' case_index 'OF' case_list_element_list ';' 'END'
+	| 'CASE' case_index 'OF' case_list_element_list ';'
+			otherwisepart statement 'END'
+	| 'CASE' case_index 'OF' case_list_element_list ';'
+			otherwisepart statement ';' 'END'
 	;
 
 case_index : expression ;
 
-case_list_element_list : case_list_element_list semicolon case_list_element
+case_list_element_list : case_list_element_list ';' case_list_element
 	| case_list_element
 	;
 
-case_list_element : case_constant_list COLON statement
+case_list_element : case_constant_list ':' statement
 	;
 
-otherwisepart :	OTHERWISE
-	| OTHERWISE COLON
+otherwisepart :	'OTHERWISE'
+	| 'OTHERWISE' ':'
 	;
 
 control_variable : identifier ;
 
 initial_value : expression ;
 
-direction : TO
-	| DOWNTO
+direction : 'TO'
+	| 'DOWNTO'
 	;
 
 final_value : expression ;
 
-record_variable_list : record_variable_list comma variable_access
+record_variable_list : record_variable_list ',' variable_access
 	| variable_access
 	;
 
@@ -461,20 +465,20 @@ factor : sign factor
 	;
 	
 exponentiation : primary
-	| primary STARSTAR exponentiation
+	| primary '**' exponentiation
 	;
 
 primary : variable_access
 	| unsigned_constant
 	| function_designator
 	| set_constructor
-	| LPAREN expression RPAREN
-	| NOT primary
+	| '(' expression ')'
+	| 'NOT' primary
 	;
 
 unsigned_constant : unsigned_number
 	| CHARACTER_STRING
-	| NIL
+	| 'NIL'
 	;
 
 unsigned_number : unsigned_integer | unsigned_real ;
@@ -488,112 +492,46 @@ unsigned_real : REALNUMBER
 function_designator : identifier params
 	;
 
-set_constructor : LBRAC member_designator_list RBRAC
-	| LBRAC RBRAC
+set_constructor : '[' member_designator_list ']'
+	| '[' ']'
 	;
 
-member_designator_list : member_designator_list comma member_designator
+member_designator_list : member_designator_list ',' member_designator
 	| member_designator
 	;
 
-member_designator : member_designator DOTDOT expression
+member_designator : member_designator '..' expression
 	| expression
 	;
 
-addop: PLUS
-	| MINUS
-	| OR
+addop: '+'
+	| '-'
+	| 'OR'
 	;
 
-mulop : STAR
-	| SLASH
-	| DIV
-	| MOD
-	| AND
+mulop : '*'
+	| '/'
+	| 'DIV'
+	| 'MOD'
+	| 'AND'
 	;
 
-relop : EQUAL
-	| NOTEQUAL
-	| LT
-	| GT
-	| LE
-	| GE
-	| IN
+relop : '='
+	| '<>'
+	| '<'
+	| '>'
+	| '<='
+	| '>='
+	| 'IN'
 	;
 
 identifier : IDENTIFIER
 	;
 
-semicolon : SEMICOLON
-	;
 
-comma : COMMA
-	;
-
-
-AND = "[Aa][Nn][Dd]" ;
-ARRAY = "[Aa][Rr][Rr][Aa][Yy]" ;
-CASE = "[Cc][Aa][Ss][Ee]" ;
-CONST = "[Cc][Oo][Nn][Ss][Tt]" ;
-DIV = "[Dd][Ii][Vv]" ;
-DO = "[Dd][Oo]" ;
-DOWNTO = "[Dd][Oo][Ww][Nn][Tt][Oo]" ;
-ELSE = "[Ee][Ll][Ss][Ee]" ;
-END = "[Ee][Nn][Dd]" ;
-EXTERNAL = "[Ee][Xx][Tt][Ee][Rr][Nn]([Aa][Ll])?" ;
-FOR = "[Ff][Oo][Rr]" ;
-FORWARD = "[Ff][Oo][Rr][Ww][Aa][Rr][Dd]" ;
-FUNCTION = "[Ff][Uu][Nn][Cc][Tt][Ii][Oo][Nn]" ;
-GOTO = "[Gg][Oo][Tt][Oo]" ;
-IF = "[Ii][Ff]" ;
-IN = "[Ii][Nn]" ;
-LABEL = "[Ll][Aa][Bb][Ee][Ll]" ;
-MOD = "[Mm][Oo][Dd]" ;
-NIL = "[Nn][Ii][Ll]" ;
-NOT = "[Nn][Oo][Tt]" ;
-OF = "[Oo][Ff]" ;
-OR = "[Oo][Rr]" ;
-OTHERWISE = "[Oo][Tt][Hh][Ee][Rr][Ww][Ii][Ss][Ee]" ;
-PACKED = "[Pp][Aa][Cc][Kk][Ee][Dd]" ;
-PBEGIN = "[Bb][Ee][Gg][Ii][Nn]" ;
-PFILE = "[Ff][Ii][Ll][Ee]" ;
-PROCEDURE = "[Pp][Rr][Oo][Cc][Ee][Dd][Uu][Rr][Ee]" ;
-PROGRAM = "[Pp][Rr][Oo][Gg][Rr][Aa][Mm]" ;
-RECORD = "[Rr][Ee][Cc][Oo][Rr][Dd]" ;
-REPEAT = "[Rr][Ee][Pp][Ee][Aa][Tt]" ;
-SET = "[Ss][Ee][Tt]" ;
-THEN = "[Tt][Hh][Ee][Nn]" ;
-TO = "[Tt][Oo]" ;
-TYPE = "[Tt][Yy][Pp][Ee]" ;
-UNTIL = "[Uu][Nn][Tt][Ii][Ll]" ;
-VAR = "[Vv][Aa][Rr]" ;
-WHILE = "[Ww][Hh][Ii][Ll][Ee]" ;
-WITH = "[Ww][Ii][Tt][Hh]" ;
-ASSIGNMENT = ':=' ;
 CHARACTER_STRING = "'([^']|'')+'" ;
-COLON = ':' ;
-COMMA = ',' ;
-DIGSEQ = "[0-9]+" ;
-DOT = '.' ;
-DOTDOT = '..' ;
-EQUAL = '=' ;
-GE = '>=' ;
-GT = '>' ;
-LBRAC = '[' ;
-LE = '<=' ;
-LPAREN = '(' ;
-LT = '<' ;
-MINUS = '-' ;
-NOTEQUAL = '<>' ;
-PLUS = '+' ;
-RBRAC = ']' ;
-REALNUMBER = "[0-9]+\.[0-9]+" ;
-RPAREN = ')' ;
-SEMICOLON = ';' ;
-SLASH = '/' ;
-STAR = '*' ;
-STARSTAR = '**' ;
 UPARROW = "->|^" ;
-
+DIGSEQ = "[0-9]+" ;
+REALNUMBER = "[0-9]+\.[0-9]+" ;
 IDENTIFIER = "[a-zA-Z]([a-zA-Z0-9])*" ;
 WHITESPACE = "[ \t\n]+|{[^}]*}|\(\*([^*]|\*+[^*)])*\*+\)" ;
