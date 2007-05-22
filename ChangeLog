@@ -1,0 +1,16 @@
+Elr 0.5.1
+  Fix -v command line flag
+  Fix line/column counting
+  Change parser return type to the type of the start symbol.
+    - Usually more useful than the number of errors. Grammar
+      can always explicitly return yyperrorcount if desired.
+  Add shift/reduce conflict warnings
+  Add "expected conflicts" flag (ala Cup)
+  Add case-insensitive grammar flag
+  Add disable automatic disambiguation flag 
+  Add parser name grammar flag
+  Add command-line usage help
+  Add automatic typing of default reductions along with some basic
+    type sanity checking.
+  Add ability to generate simple header files
+  Remove useless debugging information

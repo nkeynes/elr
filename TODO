@@ -1,26 +1,28 @@
-Plan for v1.0
+RoadMap for v1.0
 -------------
 
 Useability
-* Add command-line flags for varying levels of debug output.
 * Better parser conflict debug output
 * Better error reporting
-* Named vars could be nice
+* Possibly use named vars rather than positional vars?
 
 Performance
-* Implement comb-vector algorithm as per the dragon book
-    - Get a copy of the dragon book
-* Optimize skeleton code, try to get performance to within epsilon of
+* Implement table compression algorithm - Tarjan or better
+* Optimize skeleton code, get performance to within epsilon of
       bison/flex.
 * Test generator performance with larger grammars
 
+Codebase
+* Clean up print statements, convert to C++ cout<< expressions
+
 Features
-* Implement EBNF parser
+* Support EBNF (regular right-part) grammars
     - see nakata/sassa paper, etc
+    - look into how antlr does it
 * Implement minimal-state LR(1)
     - see pager, spector
-* Case-insensitive lexical support
-* Option to disable conflict resolution
+* L-attribution?
+* Cleanup actions
 * Implement more advanced regular expression support. In particular:
     - group counts ( a{n,m} )
     - start of line/end of line ( ^, $ )
@@ -34,5 +36,5 @@ Features
 Testing
 * Unit tests
     - framework?
-* System test cases
+* Automated system test cases
 
