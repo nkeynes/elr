@@ -1,0 +1,6 @@
+%expect 2
+
+start: 'a' start 'a'
+     | 'b' start 'b'
+     |
+     ;
