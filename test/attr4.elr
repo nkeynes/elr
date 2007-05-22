@@ -1,0 +1,14 @@
+/*
+ * 1.4 Test chain reductions
+ * This is illegal because a has an untyped action,
+ * but the value of a is used in start: a b.
+ */
+
+(char)start: a b { $$ = $2[$1]; } ;
+a: c { /* do nothing */ };
+c: NUMBER;
+b: IDENT;
+
+WHITESPACE = "[ \t\v\r\n]+";
+IDENT =  "[A-Za-z_][_A-Za-z0-9]*";
+(int) NUMBER = "[0-9]+" { $$ = strtol($1,NULL,0); } ;
