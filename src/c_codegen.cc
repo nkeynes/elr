@@ -42,6 +42,15 @@ void C_CodeGen::writeStringConst( const char *s, FILE * out )
     fputc( '\"', out );
 }
 
+void C_CodeGen::writeType( const char *s, FILE *out )
+{
+    if( s == NULL ) {
+	fputs( "void", out );
+    } else {
+	fputs( s, out );
+    }
+}
+
 void C_CodeGen::writeNextCheckArray( CombVector *vect, FILE *out )
 {
     for( int i=0; i<vect->nextCheckLen; i++ ) {
@@ -49,6 +58,21 @@ void C_CodeGen::writeNextCheckArray( CombVector *vect, FILE *out )
         if( i != vect->nextCheckLen -1 )
             fprintf( out, ", " );
     }
+}
+
+void C_CodeGen::writeParserReturn( FILE *out )
+{
+    if( grammar->startSymbol->type == NULL ) {
+	fputs( "return", out );
+    } else {
+	fprintf( out, "return yypsynattr.yy%s", 
+		 typeNameMap[*grammar->startSymbol->type].c_str() );
+    }
+}
+
+void C_CodeGen::writeReturn( FILE *out )
+{
+    fputs( "return", out );
 }
 
 /* I couldn't think of a good way to put these in the template file, so... */
@@ -121,15 +145,22 @@ void C_CodeGen::writeAttrCode( const Rule *r, int n, FILE *out )
     
     Symbol *sym = r->syms[n-1].sym;
 
-    if( sym->isTerminal && sym->type == NULL ) {
+    if( sym->type == NULL || *sym->type == SCAN_TYPE ) {
 	fprintf( out, "(yypstrstack + yypstack[yypstacktop+%d].strpos)", n-1 );
     } else {
-        fprintf( out, "yypstack[yypstacktop+%d].attr.yy%s", n-1, sym->name->c_str() );
+        fprintf( out, "yypstack[yypstacktop+%d].attr.yy%s", n-1,
+	     typeNameMap[*sym->type].c_str() );
     }
     
 }
 
 void C_CodeGen::writeSynthAttrCode( const Symbol *s, FILE *out )
 {
-    fprintf( out, "%s.yy%s", (s->isTerminal ? "yylsynattr" : "yypsynattr"), s->name->c_str() );
+    fprintf( out, "%s.yy%s", (s->isTerminal ? "yylsynattr" : "yypsynattr"), 
+	     typeNameMap[*s->type].c_str() );
+}
+
+string *C_CodeGen::defaultSymType()
+{
+    return new string("char *");
 }

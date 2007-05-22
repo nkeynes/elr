@@ -18,6 +18,7 @@
 #define elr_codegen_h 1
 
 #include <stdio.h>
+#include <map>
 #include "config.h"
 #include "grammar.h"
 #include "dfa.h"
@@ -25,18 +26,21 @@
 #include "combvect.h"
 #include "conflict.h"
 
+#define SCAN_TYPE "yyscan_t"
+
 class CodeGen {
 public:
     void init( Grammar *g, LRTable *lrt, DFA *fsa, ConflictMap *conf ) {
-        grammar = g; dfa = fsa; lr = lrt; conflict = conf;
+        grammar = g; dfa = fsa; lr = lrt; conflict = conf; errors = 0;
         parser = new CombVector( lr->states.size(), grammar->numSymbols );
         parser->fromSource(*lr);
         scanner = new CombVector( dfa->states.size(), dfa->numEquivs );
         scanner->fromSource(*dfa);
-	computeSymbolUses();
+	computeTypes();
     }
     virtual void createSourceFile( void );
     virtual void createHeaderFile( void );
+    virtual int getErrors();
 
     static CodeGen *getInstance( language_gen_t lang );
 protected:
@@ -45,7 +49,9 @@ protected:
     LRTable *lr;
     CombVector *parser, *scanner;
     ConflictMap *conflict;
-    
+    int errors;
+    hash_map<string,string, hashString> typeNameMap;
+
     virtual void processFile( const char *inname, const char *outname );
     virtual void handleCommand( char *cmd, int len, FILE *out );
     virtual void writeAttributes( FILE *out );
@@ -54,20 +60,26 @@ protected:
     virtual void writeStringConst( const char *str, FILE *out );
     virtual void writeEscapedString( const char *str, FILE *out );
     virtual void writeIdentifier( const char *str, FILE *out );
+    virtual void writeType( const char *str, FILE *out );
     virtual void writeActionCode( const Rule *r,const char *action,FILE *out );
     virtual void writeActionCode( const Terminal *t,const char *action,FILE *out );
-    virtual void computeSymbolUses( );
     virtual void computeSymbolUses( Rule *r, const char *action);
+    virtual void computeTypes();
+    virtual string *computeTypes( map<int,int> &seen, Symbol *s, string *type, int resultUsed );
+    virtual string *getSkeletonFile( char *file );
 
 /* Subclass responsibility */
     virtual void writeMemberVar( const char *type, const char *name, FILE *out ) = 0;
     virtual void writeSymbolNameArray( FILE *out ) = 0;
     virtual void writeNextCheckArray( CombVector *vect, FILE *out ) = 0;
     virtual void writeParserActions( FILE *out ) = 0;
+    virtual void writeParserReturn( FILE *out ) = 0;
+    virtual void writeReturn( FILE *out ) = 0;
     virtual void writeLexerActions( FILE *out ) = 0;
     virtual void writeSynthAttrCode( const Symbol *s, FILE *out ) = 0;
     virtual void writeAttrCode( const Rule *r, int n, FILE *out ) = 0;
     virtual void writeAttrCode( const Terminal *s, FILE *out ) = 0;
+    virtual string *defaultSymType() = 0;
     virtual char *sourceExt(void) = 0;
     virtual char *headerExt(void) = 0;
     virtual char *sourceSkel(void) = 0;
@@ -81,10 +93,14 @@ class C_CodeGen : public CodeGen {
     virtual void writeStringConst( const char *str, FILE *out );
     virtual void writeNextCheckArray( CombVector *vect, FILE *out );
     virtual void writeParserActions( FILE *out );
+    virtual void writeParserReturn( FILE *out );
+    virtual void writeReturn( FILE *out );
     virtual void writeLexerActions( FILE *out );
     virtual void writeSynthAttrCode( const Symbol *r, FILE *out );
     virtual void writeAttrCode( const Rule *r, int n, FILE *out );
     virtual void writeAttrCode( const Terminal *s, FILE *out );
+    virtual void writeType( const char *str, FILE *out );
+    virtual string *defaultSymType();
     virtual char *sourceExt(void) { return ".c"; }
     virtual char *headerExt(void) { return ".h"; }
     virtual char *sourceSkel(void) { return "skel.c"; }

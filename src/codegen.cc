@@ -41,6 +41,11 @@ CodeGen *CodeGen::getInstance( language_gen_t lang ) {
     }
 }
 
+int CodeGen::getErrors()
+{
+    return errors;
+}
+
 #define MATCH(a,l,b) (!strncmp(a,b,l) && l == strlen(b))
 
 void CodeGen::handleCommand( char *cmd, int len, FILE *out )
@@ -66,8 +71,20 @@ void CodeGen::handleCommand( char *cmd, int len, FILE *out )
         writeIntegerConst( 1, out );
     } else if( MATCH(cmd,len,"PARSER_ACCEPT_STATE") ) {
         writeIntegerConst( lr->acceptState, out );
+    } else if( MATCH(cmd,len,"PARSER_RETURN") ) {
+	writeParserReturn( out );
     } else if( MATCH(cmd,len,"PARSER_NO_STATE") ) {
         writeIntegerConst( 0, out );
+    } else if( MATCH(cmd,len,"PARSER_RETURN_TYPE") ) {
+	if( grammar->startSymbol->type != NULL ) {
+	    writeType( grammar->startSymbol->type->c_str(), out );
+	} else {
+	    writeType( NULL, out );
+	}
+    } else if( MATCH(cmd,len,"PARSER_RETURN_IF_TYPED") ) {
+	if( grammar->startSymbol->type != NULL ) {
+	    writeReturn( out );
+	}
     } else if( MATCH(cmd,len,"PARSER_ERROR_TOKEN") ) {
         writeIntegerConst( grammar->errorTerm->symbolId, out );
     } else if( MATCH(cmd,len,"PARSER_NEXTCHECK_LEN") ) {
@@ -201,7 +218,7 @@ void CodeGen::processFile( const char *inname, const char *outname )
 
 void CodeGen::createSourceFile(void)
 {
-    string fname, skelname;
+    string fname;
     FILE *f, *skel;
     int len;
     char buf[BUFSIZE];
@@ -211,18 +228,15 @@ void CodeGen::createSourceFile(void)
     else if( config.outputBase )
         fname = *config.outputBase + sourceExt();
     else BUG( "output base not set!" );
-
-    if( config.skeletonPath[config.skeletonPath.length()-1] != '/' ) {
-	skelname = config.skeletonPath + "/" + sourceSkel();
-    } else {
-	skelname = config.skeletonPath + sourceSkel();    
-    }
-    processFile( skelname.c_str(), fname.c_str() );
+    
+    string *skelname = getSkeletonFile( sourceSkel() );
+    processFile( skelname->c_str(), fname.c_str() );
+    delete skelname;
 }
 
 void CodeGen::createHeaderFile(void)
 {
-    string fname, skelname;
+    string fname;
     FILE *f, *skel;
     char buf[BUFSIZE];
     
@@ -231,9 +245,21 @@ void CodeGen::createHeaderFile(void)
     else if( config.outputBase )
         fname = *config.outputBase + headerExt();
     else BUG( "output base not set!" );
-    skelname = config.skeletonPath + headerSkel();
-    processFile( skelname.c_str(), fname.c_str() );
+    string *skelname = getSkeletonFile( headerSkel() );
+    processFile( skelname->c_str(), fname.c_str() );
+    delete skelname;
 }
+
+string *CodeGen::getSkeletonFile( char *file )
+{
+    string *skel;
+    if( config.skeletonPath[config.skeletonPath.length()-1] != '/' ) {
+	return new string(config.skeletonPath + "/" + file);
+    } else {
+	return new string(config.skeletonPath + file);
+    }
+}
+
 
 void CodeGen::writeIntegerConst( int val, FILE *out )
 {
@@ -243,6 +269,13 @@ void CodeGen::writeIntegerConst( int val, FILE *out )
 void CodeGen::writeIdentifier( const char *str, FILE *out )
 {
     fprintf( out, "%s", str );
+}
+
+void CodeGen::writeType( const char *str, FILE *out )
+{
+    if( str != NULL ) {
+	fprintf( out, "%s", str );
+    }
 }
 
 /* Good for most languages, but virtual just in case */
@@ -261,13 +294,8 @@ void CodeGen::writeEscapedString( const char *s, FILE *out )
 
 void CodeGen::writeAttributes( FILE *out )
 {
-    FOR_EACH( t, TerminalPs, grammar->terms ) {
-	if( (*t)->type )
-	    writeMemberVar( (*t)->type->c_str(), (*t)->name->c_str(), out );
-    }
-    FOR_EACH( nt, NonterminalPs, grammar->nonterms ) {
-        if ( (*nt)->type )
-            writeMemberVar( (*nt)->type->c_str(), (*nt)->name->c_str(), out );
+    for( hash_map<string,string, hashString>::iterator p = typeNameMap.begin(); p != typeNameMap.end(); p++ ) {
+	writeMemberVar( p->first.c_str(), p->second.c_str(), out );
     }
 }
 
@@ -340,20 +368,6 @@ void CodeGen::writeActionCode( const Terminal *t, const char *s, FILE *out )
     }
 }
 
-void CodeGen::computeSymbolUses( )
-{
-    FOR_EACH( nt, NonterminalPs, grammar->nonterms ) {
-        FOR_EACH( rule, RulePs, (*nt)->rules ) {
-	    if( (*rule)->reduceAction ) {
-                FOR_EACH( act, Action, (*(*rule)->reduceAction) ) {
-		    const char *s = act->action->c_str();
-		    computeSymbolUses(*rule,s);
-		}
-	    }
-	}
-    }
-}
-
 void CodeGen::computeSymbolUses( Rule *rule, const char *s ) 
 {
     while( *s ) {
@@ -365,8 +379,10 @@ void CodeGen::computeSymbolUses( Rule *rule, const char *s )
 		    BUG( "strtol failed! Holy sh*t..." );
 		if( v > 0 && v <= rule->length() ) {
 		    rule->syms[v-1].sym->isResultUsed = true;
+		    rule->syms[v-1].isResultUsed = true;
 		}
 		s = p;
+	    } else if( *s == '$' ) {
 	    }
 	} else {
 	    s++;
@@ -374,3 +390,90 @@ void CodeGen::computeSymbolUses( Rule *rule, const char *s )
     }
 }
 
+void CodeGen::computeTypes()
+{
+    map<int,int> seen;
+    computeTypes( seen, grammar->startSymbol, NULL, 0 );
+    FOR_EACH( t, TerminalPs, grammar->terms ) {
+	if( (*t)->type != NULL && typeNameMap.find(*(*t)->type) == typeNameMap.end() &&
+	    *(*t)->type != SCAN_TYPE ) {
+	    typeNameMap[*(*t)->type] = *(*t)->name;
+	}
+    }
+    FOR_EACH( nt, NonterminalPs, grammar->nonterms ) {
+	if( (*nt)->type != NULL && typeNameMap.find(*(*nt)->type) == typeNameMap.end() ) {
+	    typeNameMap[*(*nt)->type] = *(*nt)->name;
+	}
+    }
+}
+
+/**
+ * Traverse the grammar, setting the types of all nonterminals that
+ * lack both an explicit type and action. Reports conflicts and untyped
+ * rules with actions.
+ * Assumes that computeSymbolUses has already been run.
+ */
+string *CodeGen::computeTypes( map<int,int> &seen, Symbol *sym, string *type,
+			       int resultUsed )
+{
+    if( seen.find(sym->symbolId) != seen.end() && seen[sym->symbolId] >= resultUsed ) {
+	return sym->type;
+    }
+    seen[sym->symbolId] = resultUsed;
+    if( resultUsed != 0 ) {
+	sym->isResultUsed = true;
+    }
+    if( type != NULL ) {
+	if( sym->type == NULL ) {
+	    sym->type = new string(*type);
+	}
+    } 
+    if( sym->isTerminal ) {
+	if( sym->type == NULL && sym->isResultUsed ) {
+	    sym->type = new string(SCAN_TYPE);
+	}
+    } else {
+	Nonterminal *nt = (Nonterminal *)sym;
+	FOR_EACH_RULE( r, nt ) {
+	    if( (*r)->reduceAction == NULL ) {
+		/* No reduction - assume default chain action */
+		if( (*r)->length() > 0 ) {
+		    Symbol *s = (*r)->syms[0].sym;
+		    type = computeTypes( seen, s, type, resultUsed );
+		    if( type != NULL ) {
+			if( sym->type == NULL ) {
+			    sym->type = new string(*type);
+			} else if( *sym->type != *type ) {
+			    fprintf(stderr, "Value of %s used in rule:\n ",
+				    s->name->c_str());
+			    (*r)->print(stderr);
+			    fprintf(stderr, "\n was expected to have type %s, but was %s\n",
+				    sym->type->c_str(), type->c_str());
+			    errors++;
+			}
+		    }
+		    for( RuleSymbols::iterator rs = ++(*r)->syms.begin(); 
+			 rs != (*r)->syms.end(); rs++ ) {
+			computeTypes( seen, rs->sym, NULL, rs->isResultUsed ? 1 : 0 );
+		    }
+		}
+	    } else {
+		FOR_EACH( act, Action, (*(*r)->reduceAction) ) {
+		    const char *s = act->action->c_str();
+		    computeSymbolUses(*r,s);
+		}
+		FOR_EACH_RULESYM( rs, *r ) {
+		    if( computeTypes( seen, rs->sym, NULL, rs->isResultUsed ? 1 : 0 ) == NULL
+			&& rs->isResultUsed ) {
+			fprintf( stderr, "Value of %s is used in rule:\n ", 
+				 rs->sym->name->c_str() );
+			(*r)->print(stderr);
+			fprintf( stderr, "\n  but has missing or unknown type.\n" );
+			errors++;
+		    }
+		}
+	    }
+	}
+    }
+    return sym->type;
+}

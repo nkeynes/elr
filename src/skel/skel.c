@@ -36,10 +36,6 @@ $START_CODE
 #include <sys/stat.h>
 #include <unistd.h>
 
-#ifndef YYRETVAL
-#define YYRETVAL int
-#endif
-
 typedef int YY_CHAR;
 
 #define YYP_DEFAULT_STACK_LEN 128
@@ -51,7 +47,6 @@ typedef int YY_CHAR;
 #define YYL_MIN_BUFFER_FILL 128
 #endif
 
-#define YYL_MAX_SNARF_LEN 4096*1024 /* Snarf up to a 4Mb file */
 #define YYL_END_OF_LINE '\n'
 #ifndef YY_ERROR
 #define YY_ERROR(...) yyError(__VA_ARGS__)
@@ -92,7 +87,7 @@ struct yy_parseable {
 };
 
 /* Function prototypes */
-YYRETVAL $PARSER_NAME( struct yy_parseable yyf );
+$PARSER_RETURN_TYPE $PARSER_NAME( struct yy_parseable yyf );
 static int yyfInit( struct yy_parseable *yyf );
 static int yyfRelease( struct yy_parseable *yyf );
 static int yyfFill( struct yy_parseable *yyf );
@@ -115,46 +110,21 @@ static const int yylAccept[$LEXER_NUM_STATES] = { $LEXER_ACCEPT_ARRAY };
 static const int yylStart[$PARSER_NUM_REAL_STATES] = { $LEXER_START_STATE_ARRAY };
 static const int yylEquivClasses[$LEXER_NUM_EQUIV] = { $LEXER_EQUIV_ARRAY };
 
-
-YYRETVAL ${PARSER_NAME}_file( char *filename )
+$PARSER_RETURN_TYPE ${PARSER_NAME}_file( char *filename )
 {
     struct yy_parseable yyf;
     
     yyf.filename = filename;
     yyf.next = NULL;
     yyf.fd = open( filename, O_RDONLY );
-    if( yyf.fd == -1 ) return -1;
+    if( yyf.fd == -1 ) {
+	YY_ERROR( "Unable to open file: '%s' (%s)\n", filename, strerror(errno) );
+    }
     yyf.buffer = NULL;
-    return $PARSER_NAME( yyf );
+    $PARSER_RETURN_IF_TYPED $PARSER_NAME( yyf );
 }
 
-YYRETVAL ${PARSER_NAME}_snarf_file( char *filename )
-{
-    struct yy_parseable yyf;
-    struct stat st;
-    
-    yyf.filename = filename;
-    yyf.next = NULL;
-    yyf.fd = open( filename, O_RDONLY );
-    if( yyf.fd == -1 ) return -1;
-
-    if( fstat( yyf.fd, &st ) == -1 ) {
-        YY_ERROR( "Unable to stat file (%s)\n", strerror(errno) );
-        return -1;
-    }
-    if( S_ISREG(st.st_mode) && st.st_size < YYL_MAX_SNARF_LEN ) {
-        yyf.buffer = (char *)malloc( st.st_size );
-        if( yyf.buffer ) {
-            yyf.buflen = st.st_size;
-            yyf.ismybuffer = 1;
-            yyf.bufend = read( yyf.fd, yyf.buffer, yyf.buflen );
-        }
-    }
-    return $PARSER_NAME(yyf);    
-}
-    
-
-YYRETVAL ${PARSER_NAME}_buffer( char *buf, int len )
+$PARSER_RETURN_TYPE ${PARSER_NAME}_buffer( char *buf, int len )
 {
     struct yy_parseable yyf;
 
@@ -164,10 +134,10 @@ YYRETVAL ${PARSER_NAME}_buffer( char *buf, int len )
     yyf.buflen = yyf.bufend = len;
     yyf.fd = -1;
     yyf.ismybuffer = 0;
-    return $PARSER_NAME( yyf );
+    $PARSER_RETURN_IF_TYPED $PARSER_NAME( yyf );
 }
 
-YYRETVAL ${PARSER_NAME}_stream( int fd )
+$PARSER_RETURN_TYPE ${PARSER_NAME}_stream( int fd )
 {
     struct yy_parseable yyf;
     
@@ -175,7 +145,7 @@ YYRETVAL ${PARSER_NAME}_stream( int fd )
     yyf.fd = fd;
     yyf.buffer = NULL;
     yyf.filename = NULL;
-    return $PARSER_NAME( yyf );
+    $PARSER_RETURN_IF_TYPED $PARSER_NAME( yyf );
 }
 
 
@@ -230,7 +200,7 @@ int __inline__ YYL_GOTO( int state, int token ){
 	yypstrstack[yypstrstacktop-1] = '\0';				\
     }
 
-YYRETVAL $PARSER_NAME( struct yy_parseable yyf )
+$PARSER_RETURN_TYPE $PARSER_NAME( struct yy_parseable yyf )
 {
     int yytoken, i;
     int yypstate = $PARSER_START_STATE;
@@ -302,8 +272,13 @@ YYRETVAL $PARSER_NAME( struct yy_parseable yyf )
 		     * starting again
 		     */
 		    YY_ERROR( "Unable to recognize input string: '%.*s'\n", yyf.yylpos-yyf.yylfirst, yyf.buffer+yyf.yylfirst );
-		    yyf.yylline = yylline;
-		    yyf.yylcol = yylcol+1;
+		    if( yyf.buffer[yyf.yylfirst] == YYL_END_OF_LINE ) {
+			yyf.yyline++;
+			yyf.yylcol = 1;
+		    } else {
+			yyf.yylline = yylline;
+			yyf.yylcol = yylcol+1;
+		    }
 		    yyf.yylpos = yylpos = ++yyf.yylfirst;
 		    yylstate = yylStart[yypstate];
 		} else {
@@ -422,8 +397,9 @@ $PARSER_ACTION_CODE;
 
   fini:
     yyfRelease( &yyf );
+    yypsynattr = yypstack[0].attr;
     free( yypstack );
-    return yyperrorcount;
+    $PARSER_RETURN;
 }
 
 int yyfInit( struct yy_parseable *yyf )
