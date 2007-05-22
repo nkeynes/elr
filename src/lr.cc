@@ -110,19 +110,19 @@ int LRTable::addState( set<LRItem> &items )
     return num;
 }
 
-void LRTable::printItem( const LRItem &i )
+void LRTable::printItem( const LRItem &i, FILE *out )
 {
-    printf( "  (%d) %s -> ", i.rule->ruleId, i.rule->nonterm->name->c_str() );
+    fprintf( out, "  (%d) %s ::= ", i.rule->ruleId, i.rule->nonterm->name->c_str() );
     for( int j = 0; j < i.rule->length(); j ++ ) {
-        if( j == i.pos ) printf( ". " );
-        printf( "%s ", i.rule->syms[j].sym->name->c_str() );
+        if( j == i.pos ) fprintf( out, ". " );
+        fprintf( out, "%s ", i.rule->syms[j].sym->name->c_str() );
     }
-    if( i.pos == i.rule->length() ) printf( "." );
+    if( i.pos == i.rule->length() ) fprintf( out, "." );
 }    
 void LRTable::printItemSet( set<LRItem> &items )
 {
     for( set<LRItem>::iterator i = items.begin(); i != items.end(); i++ ) {
-        printItem( *i );
+        printItem( *i, stdout );
 //        if( i->followsk ) grammar->printStringSet( *i->followsk );
 
         printf("\n");
@@ -299,8 +299,9 @@ void LRTable::printState( int state ) {
     if( hadShift ) printf( "\n" );
     for( LRReduceEdge *edge = (LRReduceEdge *)states[state]->edges[0];
          edge != NULL; edge = (LRReduceEdge *)edge->chain ) {
-        printf( "  reduce rule %d  ", edge->rule->ruleId );
-        grammar->printSymbolSet( edge->lookahead );
+        printf( "  reduce ", edge->rule->ruleId );
+	edge->rule->print( stdout );
+        grammar->printSymbolSet( edge->lookahead, stdout );
         printf( "\n" );
     }
     if( states[state]->edges[0] != NULL ) printf( "\n" );

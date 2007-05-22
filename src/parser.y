@@ -47,7 +47,7 @@ int yyerror( char *s );
 %token IDENT REGEXP STRING ACTION TYPE CODE ERROR_IDENT
 %token LEFTPREC RIGHTPREC NONASSOCPREC START CLASS INCLUDE
 %token ERROR COLON OR PERIOD LPAREN RPAREN SEMICOLON EQUALS
-%token CASE EXPECT DISAMBIGUATION NUMBER ON OFF
+%token CASE EXPECT DISAMBIGUATION NUMBER ON OFF NAME LANGUAGE
 
 %type <scan> IDENT REGEXP STRING ACTION TYPE CODE ERROR_IDENT Type String NUMBER
 %type <rules> Rhs
@@ -73,6 +73,9 @@ Directive : Lprec Precs SEMICOLON
           | EXPECT NUMBER    { grammar.expectedParserConflicts = $2.number; }
           | CASE Bool        { grammar.caseSensitive = $2; }
           | DISAMBIGUATION Bool { grammar.autoLexDisambiguation = $2; }
+          | NAME String      { grammar.setName( $2.str ); }
+          | LANGUAGE String
+          ;
 Lprec : LEFTPREC             { assoc = assoc_left; prec++; }
 Rprec : RIGHTPREC            { assoc = assoc_right; prec++; }
 Nprec : NONASSOCPREC         { assoc = assoc_none; prec++; }

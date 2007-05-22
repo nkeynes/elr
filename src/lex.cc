@@ -211,6 +211,8 @@ token_t yylex( void )
                 else if( !strncasecmp(yyhead, "class", c ) ) return CLASS;
                 else if( !strncasecmp(yyhead, "include", c ) ) return INCLUDE;
 		else if( !strncasecmp(yyhead, "expect", c ) ) return EXPECT;
+		else if( !strncasecmp(yyhead, "name", c ) ) return NAME;
+		else if( !strncasecmp(yyhead, "language", c ) ) return LANGUAGE;
 		else if( !strncasecmp(yyhead, "casesensitive", c ) ) {
 		    inDirective = true;
 		    return CASE;

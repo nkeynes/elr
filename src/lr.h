@@ -33,6 +33,9 @@ class LRItem {
     StringSet2 *follows[3]; /* temporary for lalrk calculations */
     
     LRItem( Rule *r, int p ) { rule = r; pos = p; follows[1] = NULL; follows[2] = NULL; }
+    bool isEnd() const { return pos >= rule->length(); }
+    bool isStart() const { return pos == 0; }
+    Symbol *next() const { if( pos >= rule->length() ) { return NULL; } else { return rule->syms[pos].sym; } }
     bool operator <(const LRItem &a) const;
     bool operator ==(const LRItem &a) const;
 };
@@ -125,7 +128,7 @@ class LRTable : public CombSource {
     void includes( LRShiftEdge *x, set<LRShiftEdge *> &vect );
     void backtrack( set<int> &dest, set<int> &src );
     void printPredSets( void );
-    void printItem( const LRItem &i );
+    void printItem( const LRItem &i, FILE *out );
     void printItemSet( set<LRItem> &items );
     void buildReduceArrays( void );
 

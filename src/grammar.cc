@@ -27,12 +27,6 @@
 #include "dfa.h"
 #include "nfa.h"
 
-#define FOR_EACH_NONTERM( i ) FOR_EACH( i, NonterminalPs, nonterms )
-#define FOR_EACH_TERM( i ) FOR_EACH( i, TerminalPs, terms )
-#define FOR_EACH_RULE( i, nt ) FOR_EACH( i, RulePs, (nt)->rules )
-#define FOR_EACH_RULESYM( i, r ) FOR_EACH( i, RuleSymbols, (r)->syms )
-
-
 Position NO_POSITION = {0,0,NULL};
 
 /********************* class Grammar *******************/
@@ -46,6 +40,12 @@ void Grammar::setClass( string *str )
 {
     if( ooClass ) delete ooClass;
     ooClass = str;
+}
+
+void Grammar::setName( string *str )
+{
+    if( parserName ) delete parserName;
+    parserName = str;
 }
 
 void Grammar::setStartSymbol( Nonterminal *sym )
@@ -266,6 +266,7 @@ RuleSymbol::RuleSymbol( Symbol *s, Action *a, Position &pos )
     }
     action = a;
     posn = pos;
+    isResultUsed = false;
     sym->refs++;
 }
 
@@ -301,6 +302,17 @@ void Rule::fixReduce( void )
 int Rule::length( ) const
 {
     return syms.size();
+}
+
+void Rule::print( FILE *out ) 
+{
+    if( this->nonterm->type != NULL ) {
+	fprintf( out, "(%s) ", this->nonterm->type->c_str() );
+    }
+    fprintf( out, "%s ::= ", this->nonterm->name->c_str());
+    FOR_EACH( k, RuleSymbols, this->syms ) {
+	fprintf( out, "%s ", k->sym->name->c_str() );
+    }
 }
 
 void Nonterminal::setType( string *str )

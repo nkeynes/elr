@@ -65,7 +65,9 @@
      DISAMBIGUATION = 281,
      NUMBER = 282,
      ON = 283,
-     OFF = 284
+     OFF = 284,
+     NAME = 285,
+     LANGUAGE = 286
    };
 #endif
 /* Tokens.  */
@@ -96,6 +98,8 @@
 #define NUMBER 282
 #define ON 283
 #define OFF 284
+#define NAME 285
+#define LANGUAGE 286
 
 
 
@@ -118,7 +122,7 @@ typedef union YYSTYPE
     bool boolean;
 }
 /* Line 1489 of yacc.c.  */
-#line 122 "parser.hh"
+#line 126 "parser.hh"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

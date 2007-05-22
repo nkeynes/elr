@@ -35,6 +35,11 @@ class DFA;
 
 #define FOR_EACH(i, T, V) for( T::iterator i = V.begin(); i != V.end(); i++ )
 
+#define FOR_EACH_NONTERM( i ) FOR_EACH( i, NonterminalPs, nonterms )
+#define FOR_EACH_TERM( i ) FOR_EACH( i, TerminalPs, terms )
+#define FOR_EACH_RULE( i, nt ) FOR_EACH( i, RulePs, (nt)->rules )
+#define FOR_EACH_RULESYM( i, r ) FOR_EACH( i, RuleSymbols, (r)->syms )
+
 class Position {
   public:
     int line, column;
@@ -86,6 +91,7 @@ class RuleSymbol : public Node {
   public:
     Symbol *sym;
     Action *action;
+    bool isResultUsed;
 
     RuleSymbol( Symbol *sym, Action *action, Position &pos );
 };
@@ -105,6 +111,7 @@ class Rule : public Node {
     ~Rule( );
     void fixReduce( void );
     int length( ) const;
+    void print( FILE *out );
 };
 
 typedef vector<Rule> Rules;
@@ -164,6 +171,7 @@ class Grammar : public Node {
     
     void addCode( string *str, Position &posn );
     void setClass( string *str );
+    void setName( string *str );
     void setStartSymbol( Nonterminal *sym );
     Terminal *add( Terminal *term );
     Nonterminal *add( Nonterminal *nonterm );
@@ -180,7 +188,7 @@ class Grammar : public Node {
     bool resolveForwardRefs( void );
     void finalize( void ); /* call after grammar reading complete */
     void computeDFA( void );
-    void printSymbolSet( Bitset &b );
+    void printSymbolSet( Bitset &b, FILE *out );
     void printSymbolSet( StringSet2 &s );
 //    void printTokenString( const TokenString &str );
 //    void printStringSet( const StringSet2 &set );

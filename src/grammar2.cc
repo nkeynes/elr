@@ -96,9 +96,9 @@ void Grammar::checkReachability( void )
             printf("%s ", (*i)->name->c_str());
             delete *i;
             i = nonterms.erase(i);
+            count++;
             if( i == nonterms.end() ) break;
             i--;
-            count++;
         }
     }
     if( count != 0 ) printf( "unreachable - deleted (%d)\n", count );
@@ -109,9 +109,9 @@ void Grammar::checkReachability( void )
             printf("%s ", (*i)->name->c_str());
             delete *i;
             i = terms.erase(i);
+            count++;
             if( i == terms.end() ) break;
             i--;
-            count++;
         }
     }
     if( count != 0 ) printf( "unreachable - deleted (%d)\n", count );
@@ -310,16 +310,16 @@ void Grammar::computeMinRuleLengths( void )
     }
 }
 
-void Grammar::printSymbolSet( Bitset &b )
+void Grammar::printSymbolSet( Bitset &b, FILE *out )
 {
-    printf( "{" );
+    fprintf( out, "{" );
     if( b.size() != 0 ) {
         for( int i=0; i <= lastTerminal; i++ ) {
             if( b[i] )
-                printf( " %s", symbol(i)->name->c_str() );
+                fprintf( out, " %s", symbol(i)->name->c_str() );
         }
     }
-    printf( " }" );
+    fprintf( out, " }" );
 }
 
 void Grammar::printSymbolSet( StringSet2 &s )

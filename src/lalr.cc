@@ -306,7 +306,7 @@ void LRTable::resolveState( int st )
                 if( (*edge)->lookahead.get(i) ) {
 		    if( state->edges[i] == NULL ) {
 			state->edges[i] = *edge;
-		    } else {
+		    } else if( state->edges[i] != *edge ){
 			LREdge *oldedge = state->edges[i];
 			/* If we have a higher-precedence reduce edge than the
 			 * existing one, replace it with the higher-prec one.
@@ -330,10 +330,37 @@ void LRTable::reportConflict( int st, const LREdge *edge1, const LREdge *edge2, 
     if( edge1->type == SHIFT ) {
 	fprintf( stderr, "Warning: Shift/reduce conflict in state %d on terminal %s:\n", 
 		 st, grammar->symbol(terminal)->name->c_str() );
+	fprintf( stderr, "    Shift %s: \n", grammar->symbol(terminal)->name->c_str() );
+	FOR_EACH( item, set<LRItem>, states[st]->items ) {
+	    if( !item->isEnd() && item->next()->symbolId == terminal ) {
+		fprintf( stderr, "    " );
+		printItem( *item, stderr );
+		fprintf( stderr, "\n" );
+	    }
+	}
     } else {
 	fprintf( stderr, "Warning: Reduce/reduce conflict in state %d on terminal %s:\n", 
 		 st, grammar->symbol(terminal)->name->c_str() );
+	fprintf( stderr, "    Reduce: " );
+	((LRReduceEdge *)edge1)->rule->print(stderr);
+        grammar->printSymbolSet( ((LRReduceEdge *)edge1)->lookahead, stderr );
+	fprintf( stderr, "\n" );
     }
+    fprintf( stderr, "    Reduce: " );
+    ((LRReduceEdge *)edge2)->rule->print(stderr);
+    grammar->printSymbolSet( ((LRReduceEdge *)edge2)->lookahead, stderr );
+    fprintf( stderr, "\n" );
+	
+    fprintf( stderr, "Resolved in favour of " );
+    if( resolvedEdge->type == SHIFT ) {
+	fprintf( stderr, "Shift %s\n", grammar->symbol(terminal)->name->c_str() );
+    } else {
+	fprintf( stderr, "Reduce " );
+	((LRReduceEdge *)edge1)->rule->print(stderr);
+        grammar->printSymbolSet( ((LRReduceEdge *)edge1)->lookahead, stderr );
+	fprintf( stderr, "\n" );
+    }
+    fprintf( stderr, "\n" );
     unresolvedConflicts++;
 }
     

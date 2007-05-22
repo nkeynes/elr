@@ -34,16 +34,33 @@ Config config;
 typedef enum { OPT_YACC = 1, OPT_LALR = 2 } options_t;
 
 static struct option long_options[] = {
-    {"scan", 1, 0, 's'},
-    {"parse",1, 0, 'p'},
+    {"help", 0, 0, 'h'},
+    {"debug", 0, 0, 'd' },
+    {"interface", 0, 0, 'i'},
     {"yacc",0,0,OPT_YACC},
     {"lalr",0,0,OPT_LALR},
     {"output",1,0,'o'},
-    {"language",1,0,3},
+    {"language",1,0,'l'},
     {"skeleton-path",1,0,'S'},
-    {"verbose",1,0,'v'},
+    {"verbose",0,0,'v'},
+    {"version",0,0,'V'},
     {0,0,0,0} };
-static char short_options[] = "vo:S:";
+static char short_options[] = "dhilo:S:vV";
+
+void usage( FILE *out )
+{
+    fprintf( out, "Usage: %s [OPTION]... <input-filename>\n\n", APP_NAME );
+    fprintf( out, "Options:\n");
+    fprintf( out, "  -d, --debug         Generate debugging output\n" );
+    fprintf( out, "  -h, --help          Display this help text\n" );
+    fprintf( out, "  -i, --interface     Generate header file in addition to source file\n" );
+    fprintf( out, "  -l, --language      Target language [C]\n" );
+    fprintf( out, "  -o, --output        Output filename\n" );
+    fprintf( out, "  -S, --skeleton-path Path to skeleton files [%s]\n", 
+	     config.skeletonPath.c_str() );
+    fprintf( out, "  -v, --verbose       Output additional information and statistics\n" );
+    fprintf( out, "  -V, --version       Print %s version\n", APP_NAME );
+}
 
 int parseCommandLine( int argc, char *argv[] )
 {
@@ -58,16 +75,22 @@ int parseCommandLine( int argc, char *argv[] )
         if( c == EOF )
             break;
         switch(c) {
+	case 'd': config.genDebug = true; break;
+	case 'h': usage(stdout); exit(0);
+	case 'i': config.genHeader = true; break;
 	case OPT_YACC: config.outputGen = OUT_YACC; break;
 	case OPT_LALR: config.outputGen = OUT_LALR; break;
 	case 'o': config.outputSourceFile = new string(optarg); break;
-	case 'v': config.verbose = true; break;
 	case 'S': config.skeletonPath = string(optarg); break;
+	case 'v': config.verbose = true; break;
+	case 'V': 
+	    printf( "%s %s. Copyright (c) 2001-2007 Nathan Keynes.\n", APP_NAME, APP_VERSION );
+	    exit(0);
         }
     }
     while( optind < argc ) {
         if( config.inputFile ) {
-            printf( "Warning: only one input file expected (ignoring %s)\n",
+            printf( "Warning: only one input filename expected (ignoring %s)\n",
                     argv[optind] );
         } else {
             config.inputFile = new string(argv[optind]);
@@ -75,10 +98,11 @@ int parseCommandLine( int argc, char *argv[] )
         optind++;
     }    
     if( config.inputFile == NULL ) {
-        printf( "input filename required\n" );
+	usage(stdout);
+        fprintf( stderr, "\ninput-filename required\n" );
         return 0;
     }
-    if( config.outputSourceFile == NULL && config.outputBase == NULL ) {
+    if( config.outputBase == NULL ) {
         for( string::iterator l = config.inputFile->end()-1; 
 	     l != config.inputFile->begin() && *l != '/'; l-- ){
 	  if( *l == '.' ) {
@@ -145,7 +169,7 @@ int main( int argc, char *argv[] )
     }
     grammar.dfa->minimize();
 
-    if( config.verbose ) {
+    if( config.genDebug ) {
 	printf( "Grammar:\n" );
         grammar.dumpGrammar();
 	printf( "\nLexical Automata:\n" );
@@ -153,6 +177,8 @@ int main( int argc, char *argv[] )
 	printf( "\nParser Automata:\n" );
         lr->dumpTable();
         lr->printSummary();
+    }
+    if( config.verbose ) {
 	printf( "Totals:\n" );
 	printf( "  Terminals: %d\n  Nonterminals: %d\n  Rules: %d\n",
 		grammar.terms.size(), grammar.nonterms.size(), grammar.numRules );
@@ -171,14 +197,20 @@ int main( int argc, char *argv[] )
 
     CodeGen *code = CodeGen::getInstance( config.languageGen );
     code->init(&grammar, lr, grammar.dfa, conflict);
-    code->createSourceFile();
+    if( code->getErrors() == 0 ) {
+	code->createSourceFile();
+	if( config.genHeader ) {
+	    code->createHeaderFile();
+	}
 
-    if( config.verbose ) {
-	gettimeofday(&tvb, NULL);
-	printf( "Parser generated in: " );
-	printTimeDiff( &tva, &tvb );
-	printf( "s\n" );
+	if( config.verbose ) {
+	    gettimeofday(&tvb, NULL);
+	    printf( "Parser generated in: " );
+	    printTimeDiff( &tva, &tvb );
+	    printf( "s\n" );
+	}
+	return 0;
     }
 
-    return 0;
+    return 2;
 }
