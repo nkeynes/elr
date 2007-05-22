@@ -19,6 +19,9 @@
 #include <string>
 #include <iostream>
 
+#define APP_NAME "elr"
+#define APP_VERSION "0.5.1"
+
 using namespace std;
 
 #define INPUT_FILE_EXT "elr"
@@ -58,10 +61,10 @@ class Config {
     Config() {
         outputGen = OUT_GENCODE;
         scannerGen = SG_CONTEXT; parserGen = PG_NORMAL; parserType=PT_LALR;
-        parserLookahead = 1; languageGen = LANG_C; genHeader = true;
+        parserLookahead = 1; languageGen = LANG_C; genHeader = false;
         outputBase= outputSourceFile= outputHeaderFile= outputDebugFile= NULL;
         inputFile = NULL; skeletonPath = string(SKELETON_DIR);
-        genDebug = true; verbose=false;
+        genDebug = false; verbose=false;
     }
 };
 
