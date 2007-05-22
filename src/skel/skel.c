@@ -273,7 +273,7 @@ $PARSER_RETURN_TYPE $PARSER_NAME( struct yy_parseable yyf )
 		     */
 		    YY_ERROR( "Unable to recognize input string: '%.*s'\n", yyf.yylpos-yyf.yylfirst, yyf.buffer+yyf.yylfirst );
 		    if( yyf.buffer[yyf.yylfirst] == YYL_END_OF_LINE ) {
-			yyf.yyline++;
+			yyf.yylline = yylline++;
 			yyf.yylcol = 1;
 		    } else {
 			yyf.yylline = yylline;
