@@ -62,19 +62,20 @@ int yyerror( char *s );
 
 Spec : Decls                 { grammar.finalize(); }
 Decls : Decls Decl |  ;
-Decl : Directive | Rules ;
-Directive : Lprec Precs SEMICOLON
-          | Rprec Precs SEMICOLON
-          | Nprec Precs SEMICOLON
+Decl : Directive SEMICOLON 
+     | CODE                  { grammar.addCode( $1.str, $1.posn ); }
+     | Rules ;
+Directive : Lprec Precs
+          | Rprec Precs
+          | Nprec Precs
           | START IDENT      { grammar.startSymbol = (Nonterminal *)
                                    grammar.lookupIdent( $2.str, $2.posn ); }
           | CLASS String     { grammar.setClass( $2.str ); }
-          | CODE             { grammar.addCode( $1.str, $1.posn ); }
           | EXPECT NUMBER    { grammar.expectedParserConflicts = $2.number; }
           | CASE Bool        { grammar.caseSensitive = $2; }
           | DISAMBIGUATION Bool { grammar.autoLexDisambiguation = $2; }
           | NAME String      { grammar.setName( $2.str ); }
-          | LANGUAGE String
+          | LANGUAGE String 
           ;
 Lprec : LEFTPREC             { assoc = assoc_left; prec++; }
 Rprec : RIGHTPREC            { assoc = assoc_right; prec++; }

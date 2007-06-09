@@ -17,8 +17,8 @@
 
 }
 
-%casesensitive off
-%disambiguation off
+%casesensitive off;
+%disambiguation off;
 
 file : program
 	| module

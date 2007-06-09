@@ -198,6 +198,7 @@ token_t yylex( void )
                     }
                     NEXT();
                     yylval.scan.str = yystrdup( yyhead+1, yych - yyhead-2 );
+		    yyStart = true;
                     return CODE;
                 }
                 yyhead = yych;

@@ -1,4 +1,4 @@
-%expect 2
+%expect 2;
 
 start: 'a' start 'a'
      | 'b' start 'b'
