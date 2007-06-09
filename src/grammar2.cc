@@ -35,6 +35,10 @@
 
 void Grammar::finalize( void )
 {
+    if( nonterms.size() == 0 ) {
+	fprintf( stderr, "Error: Empty grammar file\n"  );
+	abort();
+    }
     if( parserName == NULL ) parserName = new string(DEFAULT_PARSER_NAME);
     if( !resolveForwardRefs() ) abort();
     Symbol *sym = getIdentByName( WHITESPACE_TERM );
