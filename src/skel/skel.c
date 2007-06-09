@@ -193,7 +193,7 @@ int __inline__ YYL_GOTO( int state, int token ){
 	    } else {							\
 		yypstrstacklen = yypstrstacklen << 1;			\
 	    }								\
-	    yypstrstack = realloc( yypstrstack, yypstrstacklen );	\
+	    yypstrstack = (char *)realloc( yypstrstack, yypstrstacklen ); \
 	}								\
 	memcpy( yypstrstack + yypstrstacktop, yyf.buffer + yyf.yylfirst, yylstrlen-1 ); \
 	yypstrstacktop += yylstrlen;					\
@@ -436,7 +436,7 @@ static int yyfFill( struct yy_parseable *yyf )
 	    yyf->yylfirst = 0;
 	}
 	if( yyf->buflen - yyf->bufend < YYL_MIN_BUFFER_FILL ) {
-	    char *tmp = realloc( yyf->buffer, yyf->buflen << 1 );
+	    char *tmp = (char *)realloc( yyf->buffer, yyf->buflen << 1 );
 	    yyf->buffer = tmp;
 	    yyf->buflen = yyf->buflen << 1;
 	}
