@@ -24,21 +24,20 @@
  * License without this special exception.                       
  */
 
-#ifndef _elr_parser_${PARSER_NAME}
-#define _elr_parser_${PARSER_NAME} 1
-$START_CODE
-$PARSER_INTERFACE
+${START_CODE}
+${PARSER_INTERFACE}
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+class ${PARSER_NAME} {
+ public:
+    ${PARSER_CONTEXT}
 
-$PARSER_RETURN_TYPE ${PARSER_NAME}_file( const char *filename );
-$PARSER_RETURN_TYPE ${PARSER_NAME}_buffer( char *buf, int len );
-$PARSER_RETURN_TYPE ${PARSER_NAME}_stream( int fd );
+    $PARSER_RETURN_TYPE parse_file( const string *filename );
+    $PARSER_RETURN_TYPE parse_file( const string &filename );
+    $PARSER_RETURN_TYPE parse_file( const char *filename );
+    $PARSER_RETURN_TYPE parse_buffer( char *buf, int len );
+    $PARSER_RETURN_TYPE parse_stream( int fd );
 
-#ifdef __cplusplus
-}
-#endif
+ protected:
+    $PARSER_RETURN_TYPE parse( struct yy_parseable &yyf );
+};
 
-#endif

@@ -67,7 +67,10 @@
      ON = 283,
      OFF = 284,
      NAME = 285,
-     LANGUAGE = 286
+     LANGUAGE = 286,
+     INTERFACE = 287,
+     IMPLEMENTATION = 288,
+     CONTEXT = 289
    };
 #endif
 /* Tokens.  */
@@ -100,6 +103,9 @@
 #define OFF 284
 #define NAME 285
 #define LANGUAGE 286
+#define INTERFACE 287
+#define IMPLEMENTATION 288
+#define CONTEXT 289
 
 
 
@@ -122,7 +128,7 @@ typedef union YYSTYPE
     bool boolean;
 }
 /* Line 1489 of yacc.c.  */
-#line 126 "parser.hh"
+#line 132 "parser.hh"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1

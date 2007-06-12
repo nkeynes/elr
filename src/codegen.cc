@@ -32,6 +32,7 @@ CodeGen *CodeGen::getInstance( language_gen_t lang ) {
         case LANG_C:
             return new C_CodeGen();
         case LANG_CPP:
+	    return new Cpp_CodeGen();
         case LANG_JAVA:
         case LANG_ADA:
             fprintf( stderr, "Language not yet supported\n" );
@@ -57,6 +58,20 @@ void CodeGen::handleCommand( char *cmd, int len, FILE *out )
 	FOR_EACH( act, Action, grammar->code ) {
 	    fprintf( out, "%s", act->action->c_str() );
 	}
+    } else if( MATCH(cmd,len,"PARSER_CONTEXT") ) {
+	FOR_EACH( act, Action, grammar->contextCode ) {
+	    fprintf( out, "%s", act->action->c_str() );
+	}
+    } else if( MATCH(cmd,len,"PARSER_INTERFACE") ) {
+	FOR_EACH( act, Action, grammar->interfaceCode ) {
+	    fprintf( out, "%s", act->action->c_str() );
+	}
+    } else if( MATCH(cmd,len,"PARSER_IMPLEMENTATION") ) {
+	FOR_EACH( act, Action, grammar->implementationCode ) {
+	    fprintf( out, "%s", act->action->c_str() );
+	}
+    } else if( MATCH(cmd,len,"INTERFACE_FILENAME") ) {
+	fprintf( out, "%s", getOutputHeaderFile().c_str() );
     } else if( MATCH(cmd,len,"END_CODE") ) {
     } else if( MATCH(cmd,len,"ATTRIBUTES") ) {
         writeAttributes( out );
@@ -218,45 +233,43 @@ void CodeGen::processFile( const char *inname, const char *outname )
 
 void CodeGen::createSourceFile(void)
 {
-    string fname;
-    FILE *f, *skel;
-    int len;
-    char buf[BUFSIZE];
-    
-    if( config.outputSourceFile )
-        fname = *config.outputSourceFile;
-    else if( config.outputBase )
-        fname = *config.outputBase + sourceExt();
-    else BUG( "output base not set!" );
-    
-    string *skelname = getSkeletonFile( sourceSkel() );
-    processFile( skelname->c_str(), fname.c_str() );
-    delete skelname;
+    processFile( getSkeletonFile( sourceSkel() ).c_str(),
+		 getOutputSourceFile().c_str() );
 }
 
 void CodeGen::createHeaderFile(void)
 {
-    string fname;
-    FILE *f, *skel;
-    char buf[BUFSIZE];
-    
-    if( config.outputHeaderFile )
-        fname = *config.outputHeaderFile;
-    else if( config.outputBase )
-        fname = *config.outputBase + headerExt();
-    else BUG( "output base not set!" );
-    string *skelname = getSkeletonFile( headerSkel() );
-    processFile( skelname->c_str(), fname.c_str() );
-    delete skelname;
+    processFile( getSkeletonFile( headerSkel() ).c_str(),
+		 getOutputHeaderFile().c_str() );
 }
 
-string *CodeGen::getSkeletonFile( char *file )
+string CodeGen::getOutputSourceFile(void)
 {
-    string *skel;
+    if( config.outputSourceFile )
+        return *config.outputSourceFile;
+    else if( config.outputBase )
+        return *config.outputBase + sourceExt();
+    else BUG( "output base not set!" );
+}
+    
+
+string CodeGen::getOutputHeaderFile(void)
+{
+    if( config.outputHeaderFile )
+        return *config.outputHeaderFile;
+    else if( config.outputBase )
+        return *config.outputBase + headerExt();
+    else BUG( "output base not set!" );
+}
+    
+
+
+string CodeGen::getSkeletonFile( char *file )
+{
     if( config.skeletonPath[config.skeletonPath.length()-1] != '/' ) {
-	return new string(config.skeletonPath + "/" + file);
+	return config.skeletonPath + "/" + file;
     } else {
-	return new string(config.skeletonPath + file);
+	return config.skeletonPath + file;
     }
 }
 

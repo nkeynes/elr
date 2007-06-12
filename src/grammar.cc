@@ -36,6 +36,21 @@ void Grammar::addCode( string *str, Position &pos )
     code.push_back( ActionItem(str, pos) );
 }
 
+void Grammar::addContextCode( string *str, Position &pos )
+{
+    contextCode.push_back( ActionItem(str, pos) );
+}
+
+void Grammar::addImplementationCode( string *str, Position &pos )
+{
+    implementationCode.push_back( ActionItem(str, pos) );
+}
+
+void Grammar::addInterfaceCode( string *str, Position &pos )
+{
+    interfaceCode.push_back( ActionItem(str, pos) );
+}
+
 void Grammar::setClass( string *str )
 {
     if( ooClass ) delete ooClass;

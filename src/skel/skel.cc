@@ -24,8 +24,9 @@
  * License without this special exception.                       
  */
 
-$START_CODE
-$PARSER_IMPLEMENTATION
+${START_CODE}
+${PARSER_IMPLEMENTATION}
+#include "$INTERFACE_FILENAME"
 
 #include <string.h>
 #include <stdlib.h>
@@ -111,7 +112,17 @@ static const int yylAccept[$LEXER_NUM_STATES] = { $LEXER_ACCEPT_ARRAY };
 static const int yylStart[$PARSER_NUM_REAL_STATES] = { $LEXER_START_STATE_ARRAY };
 static const int yylEquivClasses[$LEXER_NUM_EQUIV] = { $LEXER_EQUIV_ARRAY };
 
-$PARSER_RETURN_TYPE ${PARSER_NAME}_file( const char *filename )
+$PARSER_RETURN_TYPE ${PARSER_NAME}::parse_file( const string &filename )
+{
+    $PARSER_RETURN_IF_TYPED parse_file( filename.c_str() );
+}
+
+$PARSER_RETURN_TYPE ${PARSER_NAME}::parse_file( const string *filename )
+{
+    $PARSER_RETURN_IF_TYPED parse_file( filename->c_str() );
+}
+
+$PARSER_RETURN_TYPE ${PARSER_NAME}::parse_file( const char *filename )
 {
     struct yy_parseable yyf;
     
@@ -122,10 +133,10 @@ $PARSER_RETURN_TYPE ${PARSER_NAME}_file( const char *filename )
 	YY_ERROR( "Unable to open file: '%s' (%s)\n", filename, strerror(errno) );
     }
     yyf.buffer = NULL;
-    $PARSER_RETURN_IF_TYPED $PARSER_NAME( yyf );
+    $PARSER_RETURN_IF_TYPED parse( yyf );
 }
 
-$PARSER_RETURN_TYPE ${PARSER_NAME}_buffer( char *buf, int len )
+$PARSER_RETURN_TYPE ${PARSER_NAME}::parse_buffer( char *buf, int len )
 {
     struct yy_parseable yyf;
 
@@ -135,10 +146,10 @@ $PARSER_RETURN_TYPE ${PARSER_NAME}_buffer( char *buf, int len )
     yyf.buflen = yyf.bufend = len;
     yyf.fd = -1;
     yyf.ismybuffer = 0;
-    $PARSER_RETURN_IF_TYPED $PARSER_NAME( yyf );
+    $PARSER_RETURN_IF_TYPED parse( yyf );
 }
 
-$PARSER_RETURN_TYPE ${PARSER_NAME}_stream( int fd )
+$PARSER_RETURN_TYPE ${PARSER_NAME}::parse_stream( int fd )
 {
     struct yy_parseable yyf;
     
@@ -146,7 +157,7 @@ $PARSER_RETURN_TYPE ${PARSER_NAME}_stream( int fd )
     yyf.fd = fd;
     yyf.buffer = NULL;
     yyf.filename = NULL;
-    $PARSER_RETURN_IF_TYPED $PARSER_NAME( yyf );
+    $PARSER_RETURN_IF_TYPED parse( yyf );
 }
 
 
@@ -201,7 +212,7 @@ int __inline__ YYL_GOTO( int state, int token ){
 	yypstrstack[yypstrstacktop-1] = '\0';				\
     }
 
-$PARSER_RETURN_TYPE $PARSER_NAME( struct yy_parseable yyf )
+$PARSER_RETURN_TYPE $PARSER_NAME::parse( struct yy_parseable &yyf )
 {
     int yytoken, i;
     int yypstate = $PARSER_START_STATE;
@@ -223,8 +234,6 @@ $PARSER_RETURN_TYPE $PARSER_NAME( struct yy_parseable yyf )
     yyattr_t yylsynattr, yypsynattr;
     int yypstacklen = YYP_DEFAULT_STACK_LEN;
     int yypstacktop = 0;
-
-    $PARSER_CONTEXT
 
     yyfInit( &yyf );
     
@@ -405,7 +414,7 @@ $PARSER_ACTION_CODE;
     $PARSER_RETURN;
 }
 
-int yyfInit( struct yy_parseable *yyf )
+static int yyfInit( struct yy_parseable *yyf )
 {
     yyf->yylfirst = 0;
     yyf->yylpos = 0;

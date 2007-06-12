@@ -204,6 +204,7 @@ token_t yylex( void )
                 yyhead = yych;
                 while( !ISEOF() && isalpha(*yych) ) NEXT();
                 c = yych - yyhead;
+		inDirective = true;
                 if( !strncasecmp(yyhead, "left", c ) ) return LEFTPREC;
                 else if( !strncasecmp(yyhead, "right", c ) ) return RIGHTPREC;
                 else if( !strncasecmp(yyhead, "nonassoc", c ) )
@@ -214,14 +215,14 @@ token_t yylex( void )
 		else if( !strncasecmp(yyhead, "expect", c ) ) return EXPECT;
 		else if( !strncasecmp(yyhead, "name", c ) ) return NAME;
 		else if( !strncasecmp(yyhead, "language", c ) ) return LANGUAGE;
-		else if( !strncasecmp(yyhead, "casesensitive", c ) ) {
-		    inDirective = true;
-		    return CASE;
-		}
-		else if( !strncasecmp(yyhead, "disambiguation", c ) ) {
-		    inDirective = true; 
-		    return DISAMBIGUATION;
-		}
+		else if( !strncasecmp(yyhead, "casesensitive", c ) ) return CASE;
+		else if( !strncasecmp(yyhead, "disambiguation", c ) ) return DISAMBIGUATION;
+		else if( !strncasecmp(yyhead, "interface", c ) ) return INTERFACE;
+		else if( !strncasecmp(yyhead, "implementation", c ) ) return IMPLEMENTATION;
+		else if( !strncasecmp(yyhead, "context", c ) ) return CONTEXT;
+		else {
+		    printf( "Unrecognized directive: '%.*s'\n", c, yyhead );
+		}			    
                 break;
             case '\"': /* Regexp */
                 yyhead = yych;
@@ -253,6 +254,9 @@ token_t yylex( void )
                 }
                 NEXT();
                 yylval.scan.str = yystrdup( yyhead+1, yych - yyhead-2 );
+		if( inDirective ) {
+		    yyStart = true; 
+		}
                 return ACTION;
                 break;
 	    case '/': 

@@ -164,12 +164,17 @@ class Grammar : public Node {
     int lastTerminal;
     TerminalPs terms;
     NonterminalPs nonterms;
-    Action code;  /* Literal code chunks */
-
+    Action code;  /* Literal code chunk for both interface+implementation */
+    Action interfaceCode;
+    Action implementationCode;
+    Action contextCode;
     Grammar( );
     ~Grammar( );
     
     void addCode( string *str, Position &posn );
+    void addContextCode( string *str, Position &posn );
+    void addImplementationCode( string *str, Position &posn );
+    void addInterfaceCode( string *str, Position &posn );
     void setClass( string *str );
     void setName( string *str );
     void setStartSymbol( Nonterminal *sym );

@@ -66,7 +66,9 @@ protected:
     virtual void computeSymbolUses( Rule *r, const char *action);
     virtual void computeTypes();
     virtual string *computeTypes( map<int,int> &seen, Symbol *s, string *type, int resultUsed );
-    virtual string *getSkeletonFile( char *file );
+    virtual string getSkeletonFile( char *file );
+    virtual string getOutputSourceFile( void );
+    virtual string getOutputHeaderFile( void );
 
 /* Subclass responsibility */
     virtual void writeMemberVar( const char *type, const char *name, FILE *out ) = 0;
@@ -105,6 +107,15 @@ class C_CodeGen : public CodeGen {
     virtual char *headerExt(void) { return ".h"; }
     virtual char *sourceSkel(void) { return "skel.c"; }
     virtual char *headerSkel(void) { return "skel.h"; }
+};
+
+class Cpp_CodeGen : public C_CodeGen {
+protected:
+    virtual char *sourceExt(void) { return ".cc"; }
+    virtual char *headerExt(void) { return ".hh"; }
+    virtual char *sourceSkel(void) { return "skel.cc"; }
+    virtual char *headerSkel(void) { return "skel.hh"; }
+    
 };
 
 #endif /* ! elr_codegen_h */

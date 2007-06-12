@@ -45,7 +45,7 @@ static struct option long_options[] = {
     {"verbose",0,0,'v'},
     {"version",0,0,'V'},
     {0,0,0,0} };
-static char short_options[] = "dhilo:S:vV";
+static char short_options[] = "dhil:o:S:vV";
 
 void usage( FILE *out )
 {
@@ -78,6 +78,21 @@ int parseCommandLine( int argc, char *argv[] )
 	case 'd': config.genDebug = true; break;
 	case 'h': usage(stdout); exit(0);
 	case 'i': config.genHeader = true; break;
+	case 'l': 
+	    if( strcasecmp(optarg, "c")==0 ) {
+		config.languageGen = LANG_C;
+	    } else if( strcasecmp(optarg, "c++")==0 ||
+		       strcasecmp(optarg, "cpp")==0 ) {
+		config.languageGen = LANG_CPP;
+	    } else if( strcasecmp(optarg, "java")==0 ) {
+		config.languageGen = LANG_JAVA;
+	    } else if( strcasecmp(optarg, "ada")==0 ) {
+		config.languageGen = LANG_ADA;
+	    } else {
+		fprintf( stderr, "Unrecognized target language '%s'\n", optarg );
+		exit(2);
+	    }
+	    break;
 	case OPT_YACC: config.outputGen = OUT_YACC; break;
 	case OPT_LALR: config.outputGen = OUT_LALR; break;
 	case 'o': config.outputSourceFile = new string(optarg); break;

@@ -48,6 +48,7 @@ int yyerror( char *s );
 %token LEFTPREC RIGHTPREC NONASSOCPREC START CLASS INCLUDE
 %token ERROR COLON OR PERIOD LPAREN RPAREN SEMICOLON EQUALS
 %token CASE EXPECT DISAMBIGUATION NUMBER ON OFF NAME LANGUAGE
+%token INTERFACE IMPLEMENTATION CONTEXT
 
 %type <scan> IDENT REGEXP STRING ACTION TYPE CODE ERROR_IDENT Type String NUMBER
 %type <rules> Rhs
@@ -64,6 +65,9 @@ Spec : Decls                 { grammar.finalize(); }
 Decls : Decls Decl |  ;
 Decl : Directive SEMICOLON 
      | CODE                  { grammar.addCode( $1.str, $1.posn ); }
+     | INTERFACE ACTION      { grammar.addInterfaceCode( $2.str, $2.posn ); }
+     | IMPLEMENTATION ACTION { grammar.addImplementationCode( $2.str, $2.posn ); }
+     | CONTEXT ACTION        { grammar.addContextCode( $2.str, $2.posn ); }
      | Rules ;
 Directive : Lprec Precs
           | Rprec Precs
