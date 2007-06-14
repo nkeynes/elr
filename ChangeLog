@@ -1,3 +1,10 @@
+Elr 0.5.2
+  Fix input grammar ambiguity wrt parens (directives now must either end in
+    a semicolon or a code block).
+  Add ability to insert code blocks into just the interface file, just the
+    implementation file, and/or at the top of the parser itself. 
+  Preliminary C++ support 
+
 Elr 0.5.1
   Fix -v command line flag
   Fix line/column counting
