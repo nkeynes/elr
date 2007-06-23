@@ -18,9 +18,50 @@
 #include "codegen.h"
 #include "grammar.h"
 
+void C_CodeGen::init( Grammar *g, LRTable *lrt, DFA *fsa, ConflictMap *conf )
+{
+    CodeGen::init(g,lrt,fsa,conf);
+    computeExpectedTokens();
+}
+
+void C_CodeGen::computeExpectedTokens( void )
+{
+    expectedTokens = vector<int>();
+    expectedTokenIndex = vector<int>();
+
+    for( LRStatePs::iterator it = lr->states.begin(); it != lr->states.end(); it++ ) {
+	LRState *state = *it;
+	expectedTokenIndex.push_back(expectedTokens.size());
+	for( int i=1; i<=grammar->lastTerminal; i++ ) {
+	    if( state->edges[i] != NULL ) {
+		expectedTokens.push_back(i);
+	    }
+	}
+	expectedTokens.push_back(-1);
+    }
+}
+
+
+void C_CodeGen::handleCommand( char *cmd, int len, FILE *out )
+{ 
+    if( MATCH(cmd,len,"PARSER_EXPECT_ARRAY") ) {
+	writeIntegerArray( &(*expectedTokens.begin()), expectedTokens.size(), out );
+    } else if( MATCH(cmd,len,"PARSER_EXPECT_INDEX_ARRAY") ) {
+	for( int i=0; i<expectedTokenIndex.size(); i++ ) {
+	    if( i != 0 ) {
+		write( ", ", out );
+	    }
+	    fprintf( out, "&yypExpectTokenData[%d]", expectedTokenIndex[i] );
+	}
+    } else {
+	CodeGen::handleCommand( cmd, len, out );
+    }
+}
+
 void C_CodeGen::writeMemberVar( const char *type, const char *name, FILE *out )
 {
     fprintf( out, "    %s yy%s;\n", type, name );
+    outputLine++;
 }
 
 void C_CodeGen::writeSymbolNameArray( FILE *out )
@@ -28,7 +69,7 @@ void C_CodeGen::writeSymbolNameArray( FILE *out )
     for( int i=1; i<=grammar->numSymbols; i++ ) {
         writeStringConst( grammar->symbol(i)->name->c_str(), out );
         if( i != grammar->numSymbols )
-            fprintf( out, ", " );
+            write( ", ", out );
     }
 }
 
@@ -75,14 +116,28 @@ void C_CodeGen::writeReturn( FILE *out )
     fputs( "return", out );
 }
 
+void C_CodeGen::writeCode( const Action &action, FILE *out )
+{
+    for( Action::const_iterator i = action.begin(); i != action.end(); i++ ) {
+	const ActionItem &act = *i;
+	fprintf( out, "#line %d \"%s\"\n", act.posn.line, act.posn.filename );
+	outputLine++;
+	write( act.action->c_str(), out );
+	outputLine++;
+	fprintf( out, "\n#line %d \"%s\"\n", outputLine+1, outputFile.c_str() );
+	outputLine++;
+    }
+}
+
 /* I couldn't think of a good way to put these in the template file, so... */
 void C_CodeGen::writeParserActions( FILE *out )
 {
     FOR_EACH( nt, NonterminalPs, grammar->nonterms ) {
         FOR_EACH( rule, RulePs, (*nt)->rules ) {
 //            if( (*rule)->reduceAction && (*rule)->reduceAction->size() > 0 ) {
-            fprintf( out, "                case %d:\n                    ",
-                     (*rule)->ruleId + lr->states.size()-1 );
+            fprintf( out, "                case %d:\n", 
+		     (*rule)->ruleId + lr->states.size()-1 );
+	    outputLine++;
             if( config.genDebug ) {
                 fprintf( out, "YY_DEBUG(\"Reducing %s ->",
                          (*rule)->nonterm->name->c_str() );
@@ -90,15 +145,22 @@ void C_CodeGen::writeParserActions( FILE *out )
                     fputc( ' ', out );
                     writeEscapedString( sym->sym->name->c_str(), out );
                 }
-                fprintf( out, "\\n\");\n                    " );
+                fprintf( out, "\\n\");\n" );
+		outputLine++;
             }
+                     
             if( (*rule)->reduceAction ) {
                 FOR_EACH( act, Action, (*(*rule)->reduceAction) ) {
-                    writeActionCode( *rule, act->action->c_str(), out );
+		    fprintf( out, "#line %d \"%s\"\n", act->posn.line, act->posn.filename );
+		    outputLine++;
+		    fprintf( out, "                    " );
+                    writeActionCode( *rule, *act, out );
+		    outputLine++;
+		    fprintf( out, "\n#line %d \"%s\"\n", outputLine+1, outputFile.c_str() );
+		    outputLine++;
                 }
             }
-            fprintf( out,"\n                    break;\n");
-//            }
+            write( "\n                    break;\n", out );
         }
     }
 }
@@ -109,13 +171,19 @@ void C_CodeGen::writeLexerActions( FILE *out )
         if( (*term)->action ) {
             fprintf( out, "                    case %d: // %s \n",
                      (*term)->symbolId, (*term)->name->c_str() );
-	    fprintf( out, "                        YYL_PRE_ACTION();\n" );
-	    fprintf( out, "                        " );
+	    outputLine++;
+	    write( "                        YYL_PRE_ACTION();\n", out );
             FOR_EACH( act, Action, (*(*term)->action) ) {
-                writeActionCode( *term, act->action->c_str(), out );
+		fprintf( out, "#line %d \"%s\"\n", act->posn.line, act->posn.filename );
+		outputLine++;
+		fprintf( out, "                        " );
+                writeActionCode( *term, *act, out );
+		outputLine++;
+		fprintf( out, "\n#line %d \"%s\"\n", outputLine+1, outputFile.c_str() );
+		outputLine++;
             }
-	    fprintf( out, "                        YYL_POST_ACTION();\n" );
-            fprintf( out, "\n                        goto accept;\n" );
+	    write( "                        YYL_POST_ACTION();\n", out );
+            write( "\n                        goto accept;\n", out );
 	}
     }
 
@@ -125,12 +193,13 @@ void C_CodeGen::writeLexerActions( FILE *out )
         if( (*term)->action == NULL && (*term)->isResultUsed ) {
 	    fprintf( out, "                    case %d: // %s \n",		     
                      (*term)->symbolId, (*term)->name->c_str() );
+	    outputLine++;
 	    count++;
 	}
     }
     if( count > 0 ) {
-	fprintf( out, "                        YYL_SAVE_TEXT();\n" );
-	fprintf( out, "                        goto accept;\n" );
+	write( "                        YYL_SAVE_TEXT();\n", out );
+        write( "                        goto accept;\n", out );
     }	    
 }
 

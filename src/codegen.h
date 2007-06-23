@@ -28,9 +28,11 @@
 
 #define SCAN_TYPE "yyscan_t"
 
+#define MATCH(a,l,b) (!strncmp(a,b,l) && l == strlen(b))
+
 class CodeGen {
 public:
-    void init( Grammar *g, LRTable *lrt, DFA *fsa, ConflictMap *conf ) {
+    virtual void init( Grammar *g, LRTable *lrt, DFA *fsa, ConflictMap *conf ) {
         grammar = g; dfa = fsa; lr = lrt; conflict = conf; errors = 0;
         parser = new CombVector( lr->states.size(), grammar->numSymbols );
         parser->fromSource(*lr);
@@ -49,7 +51,8 @@ protected:
     LRTable *lr;
     CombVector *parser, *scanner;
     ConflictMap *conflict;
-    int errors;
+    int errors, outputLine;
+    string outputFile;
     hash_map<string,string, hashString> typeNameMap;
 
     virtual void processFile( const char *inname, const char *outname );
@@ -61,14 +64,17 @@ protected:
     virtual void writeEscapedString( const char *str, FILE *out );
     virtual void writeIdentifier( const char *str, FILE *out );
     virtual void writeType( const char *str, FILE *out );
-    virtual void writeActionCode( const Rule *r,const char *action,FILE *out );
-    virtual void writeActionCode( const Terminal *t,const char *action,FILE *out );
+    virtual void writeCode( const Action &action,FILE *out );
+    virtual void writeActionCode( const Rule *r,const ActionItem &action,FILE *out );
+    virtual void writeActionCode( const Terminal *t,const ActionItem &action,FILE *out );
     virtual void computeSymbolUses( Rule *r, const char *action);
     virtual void computeTypes();
     virtual string *computeTypes( map<int,int> &seen, Symbol *s, string *type, int resultUsed );
     virtual string getSkeletonFile( char *file );
     virtual string getOutputSourceFile( void );
     virtual string getOutputHeaderFile( void );
+    virtual void write( const char *str, FILE *out );
+    virtual void write( const char *str, int length, FILE *out );
 
 /* Subclass responsibility */
     virtual void writeMemberVar( const char *type, const char *name, FILE *out ) = 0;
@@ -89,7 +95,13 @@ protected:
 };
 
 class C_CodeGen : public CodeGen {
+    virtual void init( Grammar *g, LRTable *lrt, DFA *fsa, ConflictMap *conf );
   protected:
+    vector<int>expectedTokens;
+    vector<int>expectedTokenIndex;
+
+    virtual void computeExpectedTokens( void );
+    virtual void handleCommand( char *cmd, int len, FILE *out );
     virtual void writeMemberVar( const char *type, const char *name, FILE *out );
     virtual void writeSymbolNameArray( FILE *out );
     virtual void writeStringConst( const char *str, FILE *out );
@@ -98,6 +110,7 @@ class C_CodeGen : public CodeGen {
     virtual void writeParserReturn( FILE *out );
     virtual void writeReturn( FILE *out );
     virtual void writeLexerActions( FILE *out );
+    virtual void writeCode( const Action &action,FILE *out );
     virtual void writeSynthAttrCode( const Symbol *r, FILE *out );
     virtual void writeAttrCode( const Rule *r, int n, FILE *out );
     virtual void writeAttrCode( const Terminal *s, FILE *out );

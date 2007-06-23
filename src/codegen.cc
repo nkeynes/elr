@@ -47,31 +47,21 @@ int CodeGen::getErrors()
     return errors;
 }
 
-#define MATCH(a,l,b) (!strncmp(a,b,l) && l == strlen(b))
-
 void CodeGen::handleCommand( char *cmd, int len, FILE *out )
 {
 /* FIXME: Make the command matching a little more efficient. */
 
 /* Generic */
     if( MATCH(cmd,len,"START_CODE") ) {
-	FOR_EACH( act, Action, grammar->code ) {
-	    fprintf( out, "%s", act->action->c_str() );
-	}
+	writeCode(grammar->code, out);
     } else if( MATCH(cmd,len,"PARSER_CONTEXT") ) {
-	FOR_EACH( act, Action, grammar->contextCode ) {
-	    fprintf( out, "%s", act->action->c_str() );
-	}
+	writeCode(grammar->contextCode, out);
     } else if( MATCH(cmd,len,"PARSER_INTERFACE") ) {
-	FOR_EACH( act, Action, grammar->interfaceCode ) {
-	    fprintf( out, "%s", act->action->c_str() );
-	}
+	writeCode(grammar->interfaceCode, out);
     } else if( MATCH(cmd,len,"PARSER_IMPLEMENTATION") ) {
-	FOR_EACH( act, Action, grammar->implementationCode ) {
-	    fprintf( out, "%s", act->action->c_str() );
-	}
+	writeCode(grammar->implementationCode, out);
     } else if( MATCH(cmd,len,"INTERFACE_FILENAME") ) {
-	fprintf( out, "%s", getOutputHeaderFile().c_str() );
+	write(getOutputHeaderFile().c_str(), out );
     } else if( MATCH(cmd,len,"END_CODE") ) {
     } else if( MATCH(cmd,len,"ATTRIBUTES") ) {
         writeAttributes( out );
@@ -126,6 +116,8 @@ void CodeGen::handleCommand( char *cmd, int len, FILE *out )
         writeIntegerConst( lr->states.size()-1, out );
     } else if( MATCH(cmd,len,"PARSER_FIRST_REDUCE_STATE") ) {
         writeIntegerConst( lr->states.size(), out );
+    } else if( MATCH(cmd,len,"PARSER_LAST_TERMINAL") ) {
+        writeIntegerConst( grammar->lastTerminal, out );
 /* Scanner */
     } else if( MATCH(cmd,len,"LEXER_NEXTCHECK_LEN") ) {
         writeIntegerConst( scanner->nextCheckLen, out );
@@ -203,6 +195,8 @@ void CodeGen::processFile( const char *inname, const char *outname )
     }
 
     /* Process line-by-line (avoids breaking commands at end of buffer) */
+    outputFile = string(outname);
+    outputLine = 1;
     while( fgets( buf, BUFSIZE, in ) ) {
         char *s, *p;
         
@@ -212,7 +206,7 @@ void CodeGen::processFile( const char *inname, const char *outname )
          */
         for( s = p = buf; *s; s++ ) {
             if( *s == '$' ) { /* Command */
-                if( s != p ) fwrite( p, s-p, 1, out );
+                if( s != p ) write( p, s-p, out );
                 char *j;
                 if( *(s+1) == '{' ) {
                     for( j = s+2; *j && *j !='}'; j++ );
@@ -225,7 +219,7 @@ void CodeGen::processFile( const char *inname, const char *outname )
                 }
             }
         }
-        if( s != p ) fwrite( p, s-p, 1, out );
+        if( s != p ) write( p, s-p, out );
     }
     fclose( in );
     fclose( out );
@@ -273,6 +267,26 @@ string CodeGen::getSkeletonFile( char *file )
     }
 }
 
+void CodeGen::write( const char *str, FILE *out )
+{
+    /* Count line breaks */
+    for( int i=0; str[i] != '\0'; i++ ) {
+	if( str[i] == '\n' ) {
+	    outputLine++;
+	}
+    }
+    fputs( str, out );
+}
+
+void CodeGen::write( const char *str, int length, FILE *out )
+{
+    for( int i=0; i<length; i++ ) {
+	if( str[i] == '\n' ) {
+	    outputLine++;
+	}
+    }
+    fwrite( str, length, 1, out );
+}
 
 void CodeGen::writeIntegerConst( int val, FILE *out )
 {
@@ -321,9 +335,20 @@ void CodeGen::writeIntegerArray( int *arr, int len, FILE *out )
     }
 }
 
-void CodeGen::writeActionCode( const Rule *r, const char *s, FILE *out )
+void CodeGen::writeCode( const Action &action, FILE *out )
+{    
+    for( Action::const_iterator i = action.begin(); i != action.end(); i++ ) {
+	write( i->action->c_str(), out );
+    }
+}
+
+void CodeGen::writeActionCode( const Rule *r, const ActionItem &act, FILE *out )
 {
+    const char *s = act.action->c_str();
     while( *s ) {
+	if( *s == '\n' ) {
+	    outputLine++;
+	}
         if( *s == '$' ) {
             if( *++s == '$' ) {
                 writeSynthAttrCode( r->nonterm, out );
@@ -354,9 +379,13 @@ void CodeGen::writeActionCode( const Rule *r, const char *s, FILE *out )
 }
 
 
-void CodeGen::writeActionCode( const Terminal *t, const char *s, FILE *out )
+void CodeGen::writeActionCode( const Terminal *t, const ActionItem &act, FILE *out )
 {
+    const char *s = act.action->c_str();
     while( *s ) {
+	if( *s == '\n' ) {
+	    outputLine++;
+	}
         if( *s == '$' ) {
             if( *++s == '$' ) {
                 writeSynthAttrCode( t, out );

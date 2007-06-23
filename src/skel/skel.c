@@ -60,6 +60,10 @@ typedef int YY_CHAR;
 #endif
 #endif
 
+#ifndef YY_PARSE_ERROR
+#define YY_PARSE_ERROR(tok,lit,litlen, line,col,state) yyParseError(tok,lit,litlen,line,col,state);
+#endif
+
 typedef union {
     $ATTRIBUTES
 } yyattr_t;
@@ -93,7 +97,8 @@ static int yyfInit( struct yy_parseable *yyf );
 static int yyfRelease( struct yy_parseable *yyf );
 static int yyfFill( struct yy_parseable *yyf );
 static int yyError( char *s, ... );
-
+static int yyParseError( int token, const char *literal, int literal_len, 
+			 int line, int column, int state );
 
 /* Parser tables */
 static const int yypNextCheck[$PARSER_NEXTCHECK_LEN][2] = { $PARSER_NEXTCHECK_ARRAY };
@@ -102,6 +107,8 @@ static const int yypDefault[$PARSER_BASE_LEN] = { $PARSER_DEFAULT_ARRAY };
 static const int yypReduceLength[$PARSER_NUM_STATES] = { $PARSER_REDUCE_LEN_ARRAY };
 static const int yypReduceToken[$PARSER_NUM_STATES] = { $PARSER_REDUCE_TOK_ARRAY };
 static const char *yySymbolName[$NUM_SYMBOLS] = { "ERR", $SYMBOL_NAME_ARRAY };
+static const int yypExpectTokenData[] = { $PARSER_EXPECT_ARRAY };
+static const int *yypExpectTokens[$PARSER_NUM_STATES] = { $PARSER_EXPECT_INDEX_ARRAY };
 
 /* Lexer tables */
 static const int yylNextCheck[$LEXER_NEXTCHECK_LEN][2] = { $LEXER_NEXTCHECK_ARRAY };
@@ -211,7 +218,7 @@ $PARSER_RETURN_TYPE $PARSER_NAME( struct yy_parseable yyf )
     /* Lexer variables */
     int yylstate, yylnextstate;
     int yyllastaccept;
-    int yylline, yylcol, yylpos, yylstrpos;
+    int yylline, yylcol, yylpos;
     int yylstrlen = 0;
 
     /* String stack */
@@ -247,7 +254,6 @@ $PARSER_RETURN_TYPE $PARSER_NAME( struct yy_parseable yyf )
 	yylline = yyf.yylline;
 	yylcol = yyf.yylcol;
 	yylpos = yyf.yylfirst = yyf.yylpos;
-	yylstrpos = yypstrstacktop;
 	yylstrlen = 0;
 
         while( 1 ) {
@@ -333,9 +339,8 @@ $LEXER_ACTION_CODE;
                         goto fini;
                     break; /* drop token on the floor */
                 }
-		YY_ERROR( "Unexpected token: %s ('%.*s') at %d.%d\n", yySymbolName[yytoken],
-			  yyf.yylpos-yyf.yylfirst, yyf.buffer+yyf.yylfirst,			  
-			  yylline, yylcol );
+		YY_PARSE_ERROR( yytoken, yyf.buffer+yyf.yylfirst, yyf.yylpos-yyf.yylfirst,
+				yylline, yylcol, yypstate );
                 yyperrorcount++;
                 do {
                     yypnextstate = YYP_GOTO( yypstate, $PARSER_ERROR_TOKEN );
@@ -351,6 +356,7 @@ $LEXER_ACTION_CODE;
 	    if( yypnextstate <= $PARSER_LAST_SHIFT_STATE ) {
 		/* Shift action (terminal): push state, attrs */
                 YY_DEBUG( "Shift %s => %d\n", yySymbolName[yytoken], yypnextstate );
+		int yylstrpos = yypstrstacktop;
 		if( yylstrlen ) {
 		    YYP_PUSH_TEXT();
 		}
@@ -486,6 +492,35 @@ static int yyError( char *s, ... )
     va_start( ap, s );
     vfprintf( stderr, s, ap );
     va_end( ap );
+}
+
+static int yyParseError( int token, const char *literal, int literal_len, 
+			 int line, int column, int state ) {
+    int len = 2, i;
+    for( i=0; yypExpectTokens[state][i] != -1; i++ ) {
+	len += strlen(yySymbolName[yypExpectTokens[state][i]]) + 2;
+    }
+    char buf[len], *p = buf;
+    for( i=0; yypExpectTokens[state][i] != -1; i++ ) {
+	if( p != buf ) {
+	    if( yypExpectTokens[state][i+1] == -1 ) {
+		strcpy( p, " or " );
+		p+=4;
+	    } else {
+		strcpy( p, ", " );
+		p+=2;
+	    }
+	}
+	strcpy( p, yySymbolName[yypExpectTokens[state][i]]);
+	p += strlen(p);
+    }
+    if( token == $LEXER_EOF_TOKEN ) {
+	YY_ERROR( "Unexpected end of file at %d.%d, expected %s\n",
+		  line, column, buf );
+    } else {
+	YY_ERROR( "Unexpected token: %s ('%.*s') at %d.%d, expected %s\n", yySymbolName[token],
+		  literal_len, literal, line, column, buf );
+    }
 }
 
 $END_CODE
