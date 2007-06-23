@@ -110,6 +110,8 @@ class LRTable : public CombSource {
     void printState( int state );
     void printSummary( void );
 
+    LRState *getState( int no ) { return states[no]; }
+
     virtual void getRow(int row, int *out); /* CombSource */
   protected:
     int addState( set<LRItem> &items );

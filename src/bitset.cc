@@ -13,11 +13,11 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
+#include "bitset.h"
+#include <sstream>
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include <ctype.h>
-#include "bitset.h"
 
 #define INT_BITS (sizeof(unsigned int)*8)
 #define SEG(n) data[n/INT_BITS]
@@ -79,17 +79,17 @@ void Bitset::toggle( void )
     for( unsigned int i=0;i<length;i++ ) data[i] ^= ~0;
 }
 
-int Bitset::size( void )
+int Bitset::size( void ) const
 {
     return length * INT_BITS;
 }
 
-bool Bitset::get( unsigned int N )
+bool Bitset::get( unsigned int N ) const
 {
     return !!(SEG(N) & OFF(N));
 }
 
-bool Bitset::isEmpty( void )
+bool Bitset::isEmpty( void ) const
 {
     for( unsigned int i=0; i<length; i++ )
         if( data[i] != 0 ) return false;
@@ -137,7 +137,7 @@ Bitset &Bitset::operator =( const Bitset &a )
     return *this;
 }
 
-bool Bitset::isDisjoint( const Bitset &a )
+bool Bitset::isDisjoint( const Bitset &a ) const
 {
     for( unsigned int i=0; i<min(length,a.length); i++ ) {
         if( (data[i] & a.data[i]) != 0 ) return false;
@@ -145,7 +145,7 @@ bool Bitset::isDisjoint( const Bitset &a )
     return true;
 }
 
-bool Bitset::contains( const Bitset &a )
+bool Bitset::contains( const Bitset &a ) const
 {
     for( unsigned int i=0; i<min(length,a.length); i++ ) {
         if( (a.data[i] & data[i]) != a.data[i] ) return false;
@@ -153,7 +153,7 @@ bool Bitset::contains( const Bitset &a )
     return true;
 }
 
-void Bitset::print()
+void Bitset::print() const
 {
     int end = length*INT_BITS-1;
     
@@ -173,4 +173,44 @@ void Bitset::print()
         }
     }
     printf( "]" );
+}
+
+std::ostream &Bitset::printOn( std::ostream &out ) const
+{
+    char buf[6];
+    int end = length*INT_BITS-1;
+    out << "[";
+    for( unsigned int i=0; i<=end; i++ ) {
+        if( get(i) ) {
+            if( i == '-' || i == '\\' || i == '[' || i == ']') 
+		out << "\\";
+            if( isprint(i) ) 
+		out << (char)i;
+            else {
+		sprintf( buf, "\\%03o", i );
+		out << buf;
+	    }
+            if( i<end && get(i+1) ) {
+                while( i<end && get(i+1)) i++;
+                out << "-";
+                if( i == '-' || i == '\\' || i == '[' || i == ']')
+		    out << "\\";
+                if( isprint(i) )
+		    out << (char)i;
+                else {
+		    sprintf( buf, "\\%03o", i );
+		    out << buf;
+		}
+            }
+        }
+    }
+    out << "]";
+    return out;
+}
+
+std::string Bitset::toString( void ) const 
+{
+    std::ostringstream ss;
+    printOn(ss);
+    return ss.str();
 }

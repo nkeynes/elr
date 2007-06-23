@@ -17,6 +17,9 @@
 #ifndef elr_bitset_H
 #define elr_bitset_H
 
+#include <string>
+#include <iostream>
+
 class Bitset {
   public:
     Bitset( );
@@ -27,17 +30,17 @@ class Bitset {
     void set( unsigned int N );
     void clear( unsigned int N );
     void toggle( unsigned int N );
-    bool get( unsigned int N );
-    bool isDisjoint( const Bitset & );
-    bool contains( const Bitset & );
+    bool get( unsigned int N ) const;
+    bool isDisjoint( const Bitset & ) const;
+    bool contains( const Bitset & ) const;
     
     void set( void );
     void clear( void );
     void toggle( void );
-    int size( void );
-    int count( void );
-    void print( void );
-    bool isEmpty( void );
+    int size( void ) const;
+    int count( void ) const;
+    void print( void ) const;
+    bool isEmpty( void ) const;
 
     bool operator []( const unsigned int N );
     Bitset &operator |=( const Bitset & );
@@ -48,17 +51,23 @@ class Bitset {
         if( length != b.length ) return false;
         for( int i=0; i<length; i++ ) if( data[i] != b.data[i] ) return false;
         return true;
-    }
+    };
     bool operator !=( const Bitset &b ) const {
         if( length != b.length ) return true;
         for( int i=0; i<length; i++ ) if( data[i] != b.data[i] ) return true;
         return false;
-    }
+    };
 
     Bitset operator &( const Bitset & );
+
+    std::ostream &printOn( std::ostream &out ) const;
+    std::string toString( void ) const;
+
   protected:
     unsigned int length;
     unsigned int *data;
 };
+
+inline std::ostream &operator<<(std::ostream &out, const Bitset &bs) { return bs.printOn(out); }
 
 #endif /* !elr_bitset_H */

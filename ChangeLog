@@ -1,3 +1,10 @@
+Elr 0.5.3
+  Fix string stack bug (incorrect position following reduction)
+  Fix fencepost error in lalr generation
+  Add expected tokens information to parser error output.
+  Add #line directives to generated output
+  Start adding CppUnit based tests
+
 Elr 0.5.2
   Fix input grammar ambiguity wrt parens (directives now must either end in
     a semicolon or a code block).
