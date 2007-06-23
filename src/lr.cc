@@ -157,7 +157,7 @@ void LRTable::constructPDA( void )
                 } else { assert( states[next]->accessSym == sym ); }
                 states[next]->pred.insert( state );
                 states[state]->edges[i] =
-                    new LRShiftEdge( next, NULL, NULL, grammar->lastTerminal );
+                    new LRShiftEdge( next, NULL, NULL, grammar->lastTerminal+1 );
                 states[state]->hasShifts = true;
             }
         }
@@ -167,7 +167,7 @@ void LRTable::constructPDA( void )
             if( i->pos == i->rule->length() ) {
                 states[state]->edges[0] = new LRReduceEdge(
                     i->rule, i->rule->reduceAction, states[state]->edges[0],
-                    grammar->lastTerminal);
+                    grammar->lastTerminal+1);
                 states[state]->numReductions++;
             }
         }
