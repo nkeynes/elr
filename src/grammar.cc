@@ -107,7 +107,7 @@ void Grammar::computeDFA( void )
 
 
 /****************** Lookup routines ****************/
-Symbol *Grammar::getIdentByName( char *name )
+Symbol *Grammar::getIdentByName( const char *name )
 {
     string *str= new string(name);
     Symbol *sym = nontermHash[*str];

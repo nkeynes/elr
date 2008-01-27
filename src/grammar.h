@@ -183,7 +183,7 @@ class Grammar : public Node {
     Symbol *symbol( int symbolId );
 
     Symbol *lookupIdent( string *name, Position &posn );
-    Symbol *getIdentByName( char *name ); /* Doesn't create */
+    Symbol *getIdentByName( const char *name ); /* Doesn't create */
     Nonterminal *makeNonterminal( string *name, Position &posn );
     Terminal *lookupStringTerm( string *name, Position &posn );
     Terminal *lookupRegexpTerm( string *name, Position &posn );
@@ -215,7 +215,7 @@ class Grammar : public Node {
     void nullify( Nonterminal *nt, RulePs **used );
 };
 
-int yyerror( char *s );
+int yyerror( const char *s );
 int yyparse();
 
 #endif /* !elr_grammar_H */

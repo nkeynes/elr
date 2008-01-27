@@ -70,7 +70,7 @@ protected:
     virtual void computeSymbolUses( Rule *r, const char *action);
     virtual void computeTypes();
     virtual string *computeTypes( map<int,int> &seen, Symbol *s, string *type, int resultUsed );
-    virtual string getSkeletonFile( char *file );
+    virtual string getSkeletonFile( const char *file );
     virtual string getOutputSourceFile( void );
     virtual string getOutputHeaderFile( void );
     virtual void write( const char *str, FILE *out );
@@ -88,10 +88,10 @@ protected:
     virtual void writeAttrCode( const Rule *r, int n, FILE *out ) = 0;
     virtual void writeAttrCode( const Terminal *s, FILE *out ) = 0;
     virtual string *defaultSymType() = 0;
-    virtual char *sourceExt(void) = 0;
-    virtual char *headerExt(void) = 0;
-    virtual char *sourceSkel(void) = 0;
-    virtual char *headerSkel(void) = 0;
+    virtual const char *sourceExt(void) = 0;
+    virtual const char *headerExt(void) = 0;
+    virtual const char *sourceSkel(void) = 0;
+    virtual const char *headerSkel(void) = 0;
 };
 
 class C_CodeGen : public CodeGen {
@@ -116,18 +116,18 @@ class C_CodeGen : public CodeGen {
     virtual void writeAttrCode( const Terminal *s, FILE *out );
     virtual void writeType( const char *str, FILE *out );
     virtual string *defaultSymType();
-    virtual char *sourceExt(void) { return ".c"; }
-    virtual char *headerExt(void) { return ".h"; }
-    virtual char *sourceSkel(void) { return "skel.c"; }
-    virtual char *headerSkel(void) { return "skel.h"; }
+    virtual const char *sourceExt(void) { return ".c"; }
+    virtual const char *headerExt(void) { return ".h"; }
+    virtual const char *sourceSkel(void) { return "skel.c"; }
+    virtual const char *headerSkel(void) { return "skel.h"; }
 };
 
 class Cpp_CodeGen : public C_CodeGen {
 protected:
-    virtual char *sourceExt(void) { return ".cc"; }
-    virtual char *headerExt(void) { return ".hh"; }
-    virtual char *sourceSkel(void) { return "skel.cc"; }
-    virtual char *headerSkel(void) { return "skel.hh"; }
+    virtual const char *sourceExt(void) { return ".cc"; }
+    virtual const char *headerExt(void) { return ".hh"; }
+    virtual const char *sourceSkel(void) { return "skel.cc"; }
+    virtual const char *headerSkel(void) { return "skel.hh"; }
     
 };
 

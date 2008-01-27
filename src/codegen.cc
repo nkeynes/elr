@@ -258,7 +258,7 @@ string CodeGen::getOutputHeaderFile(void)
     
 
 
-string CodeGen::getSkeletonFile( char *file )
+string CodeGen::getSkeletonFile( const char *file )
 {
     if( config.skeletonPath[config.skeletonPath.length()-1] != '/' ) {
 	return config.skeletonPath + "/" + file;

@@ -26,7 +26,7 @@ assoc_t assoc;
 Nonterminal *lhs; 
 int prec = 0;
 
-int yyerror( char *s );
+int yyerror( const char *s );
  %}
 
 %union {
@@ -135,7 +135,7 @@ Action : Action ACTION       { $$ = $1;
        ;
 
 %%
-int yyerror( char *s )
+int yyerror( const char *s )
 {
     fprintf( stderr, "%s\n", s );
     return 0;
