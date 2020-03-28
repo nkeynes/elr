@@ -40,7 +40,9 @@ void Grammar::finalize( void )
 	abort();
     }
     if( parserName == NULL ) parserName = new string(DEFAULT_PARSER_NAME);
-    if( !resolveForwardRefs() ) abort();
+    if( !resolveForwardRefs() ) {
+    	exit(1);
+    }
     Symbol *sym = getIdentByName( WHITESPACE_TERM );
     if( sym && sym->isTerminal ) spaceTerm = (Terminal *)sym;
 

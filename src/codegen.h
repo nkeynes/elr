@@ -53,7 +53,7 @@ protected:
     ConflictMap *conflict;
     int errors, outputLine;
     string outputFile;
-    hash_map<string,string, hashString> typeNameMap;
+    unordered_map<string,string> typeNameMap;
 
     virtual void processFile( const char *inname, const char *outname );
     virtual void handleCommand( char *cmd, int len, FILE *out );

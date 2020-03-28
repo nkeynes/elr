@@ -19,6 +19,7 @@
 #include <getopt.h>
 #include <sys/time.h>
 #include <string>
+#include <strings.h>
 #include "config.h"
 #include "grammar.h"
 #include "lr.h"

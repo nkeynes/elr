@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <string>
+#include <string.h>
 #include "config.h"
 #include "grammar.h"
 #include "equiv.h"
@@ -321,7 +322,7 @@ void CodeGen::writeEscapedString( const char *s, FILE *out )
 
 void CodeGen::writeAttributes( FILE *out )
 {
-    for( hash_map<string,string, hashString>::iterator p = typeNameMap.begin(); p != typeNameMap.end(); p++ ) {
+    for( unordered_map<string,string>::iterator p = typeNameMap.begin(); p != typeNameMap.end(); p++ ) {
 	writeMemberVar( p->first.c_str(), p->second.c_str(), out );
     }
 }

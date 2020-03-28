@@ -162,7 +162,7 @@ $PARSER_RETURN_TYPE ${PARSER_NAME}_stream( int fd )
  	                       yypstack[yypstacktop].attr = a; \
                                yypstacktop++; }
 
-int __inline__ YYP_GOTO( int state, int token ){
+int static inline YYP_GOTO( int state, int token ){
     int yypnextstate = state, yypidx;
     do {
         yypidx = yypBase[yypnextstate]+token;
@@ -176,7 +176,7 @@ int __inline__ YYP_GOTO( int state, int token ){
 }
 
 /* Lexer macros */
-int __inline__ YYL_GOTO( int state, int token ){
+int static inline YYL_GOTO( int state, int token ){
     int yylnextstate = state, yylidx;
     do {
         yylidx = yylBase[yylnextstate]+token;

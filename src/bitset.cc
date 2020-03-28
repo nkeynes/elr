@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <string.h>
 
 #define INT_BITS (sizeof(unsigned int)*8)
 #define SEG(n) data[n/INT_BITS]

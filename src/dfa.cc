@@ -17,6 +17,7 @@
 #include <assert.h>
 #include <vector>
 #include <string>
+#include <string.h>
 #include "grammar.h"
 #pragma implementation "dfa.h"
 #include "dfa.h"
@@ -43,7 +44,7 @@ DFA::~DFA( )
     }
 }
 
-namespace __gnu_cxx {
+namespace std {
 
 template <> struct hash< set<int> > {
     size_t operator()( set<int> __s ) const {
@@ -55,13 +56,14 @@ template <> struct hash< set<int> > {
 };
 }
 
+
 /*
  * NFA => DFA Computation
  */
 DFA *DFA::fromNFA( NFA *nfa )
 {
     DFA *dfa = new DFA(nfa->numEquivs, nfa->equivs);
-    hash_map<set<int>, int> nfaMap;
+    unordered_map<set<int>, int> nfaMap;
     set<int> dest;
     int next, state, count = 1;
 

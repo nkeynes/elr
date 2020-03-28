@@ -14,6 +14,7 @@
  * GNU General Public License for more details.
  */
 #include <assert.h>
+#include <string.h>
 #include "config.h"
 #include "codegen.h"
 #include "grammar.h"

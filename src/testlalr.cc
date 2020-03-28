@@ -25,7 +25,7 @@
 #include "lex.h"
 #include "lr.h"
 
-#define GRAMMAR_PATH "../test/"
+#define GRAMMAR_PATH SRC_DIR "/../test/"
 
 Grammar grammar;
 

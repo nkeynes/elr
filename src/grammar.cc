@@ -105,14 +105,11 @@ void Grammar::computeDFA( void )
     delete fsa;
 }
 
-
 /****************** Lookup routines ****************/
 Symbol *Grammar::getIdentByName( const char *name )
 {
-    string *str= new string(name);
-    Symbol *sym = nontermHash[*str];
-    delete str;
-    return sym;
+    auto it = nontermHash.find(name);
+    return it == nontermHash.end() ? nullptr : it->second;
 }
 
 Terminal *Grammar::lookupStringTerm( string *name, Position &posn )
@@ -148,12 +145,11 @@ Symbol *Grammar::lookupIdent( string *name, Position &posn )
 
 Nonterminal *Grammar::makeNonterminal( string *name, Position &posn )
 {
-    Symbol *sym = nontermHash[*name];
+    Symbol *&sym = nontermHash[*name];
     if( sym == NULL || sym->isTerminal ) {
         if( sym )
             printf( "Error: Lexical identifier redefined as nonterminal\n" );
         sym = new Nonterminal( name, posn );
-        nontermHash[*name] = sym;
         add( (Nonterminal *)sym );
     } else delete name;
     return (Nonterminal *)sym;

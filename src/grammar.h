@@ -20,10 +20,9 @@
 #include <vector>
 #include <list>
 #include <string>
-#include <ext/hash_map>
+#include <unordered_map>
 
 using namespace std;
-using namespace __gnu_cxx;
 
 #include "bitset.h"
 #include "stringset2.h"
@@ -143,12 +142,6 @@ class Nonterminal : public Symbol {
 typedef vector<Nonterminal> Nonterminals;
 typedef vector<Nonterminal *> NonterminalPs;
 
-
-struct hashString : hash<string> {
-    hash<const char *> h;
-    size_t operator()(string __s) const { return h(__s.c_str()); }
-};
-
 class Grammar : public Node {
   public:
     string *ooClass;
@@ -201,9 +194,9 @@ class Grammar : public Node {
     void computeFirst( int k );
     
   protected:
-    hash_map<string,Symbol *,hashString> nontermHash;
-    hash_map<string,Terminal *,hashString> stringTermHash;
-    hash_map<string,Terminal *,hashString> regexpTermHash;
+    unordered_map<string,Symbol *> nontermHash;
+    unordered_map<string,Terminal *> stringTermHash;
+    unordered_map<string,Terminal *> regexpTermHash;
 
     /* Grammar computations run from finalize */
     void assignSymbolIds( void );

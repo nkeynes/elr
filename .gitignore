@@ -1,0 +1,14 @@
+*~
+*.o
+*.Po
+autom4te.cache
+config.h
+config.log
+config.status
+Makefile
+build
+elr
+unittest
+po/POTFILES
+po/Makefile.in
+test/config.c

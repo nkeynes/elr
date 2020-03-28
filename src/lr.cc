@@ -17,10 +17,11 @@
 #include <stdio.h>
 #include <assert.h>
 #include <algorithm>
+#include <string.h>
 #include "grammar.h"
 #include "lr.h"
 
-namespace __gnu_cxx {
+namespace std {
 template <> struct hash< set<LRItem> > {
     size_t operator()( set<LRItem> __s ) const {
         size_t __h = 0;
@@ -131,7 +132,7 @@ void LRTable::printItemSet( set<LRItem> &items )
 
 void LRTable::constructPDA( void )
 {
-    hash_map<set<LRItem>,int> stateHash;
+    unordered_map<set<LRItem>,int> stateHash;
     set<LRItem> items;
     int next;
 
